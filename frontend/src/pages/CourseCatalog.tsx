@@ -10,15 +10,16 @@ export default function CourseCatalog() {
     fetchCoursesList();
   }, [fetchCoursesList]);
 
-  const handleEnroll = async (id: string) => {
-    try {
-      await enrollCourse(id);
-      alert("Enrolled successfully!");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to enroll.");
-    }
-  };
+const handleEnroll = async (id: number) => {
+  try {
+    await enrollCourse(id);
+    alert("Enrolled successfully!");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to enroll.");
+  }
+};
+
 
   if (isLoadingLms && courses.length === 0)
     return <div>Loading courses...</div>;

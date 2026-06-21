@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useStore } from "../store/useStore";
+import { useLmsStore } from "../store/useLmsStore";
 import { triggerLessonAi } from "../api";
 import { getEcho } from "../utils/echo";
 
 export default function LessonViewer() {
   const { courseId, lessonId } = useParams();
-  const { activeLesson, isLoadingLms, fetchSingleLesson } = useStore();
+  const { activeLesson, isLoadingLms, fetchSingleLesson } = useLmsStore();
   
   // Local state for the AI Assistant
   const [aiLoading, setAiLoading] = useState(false);
@@ -23,7 +23,6 @@ export default function LessonViewer() {
 
   // Listen for the WebSocket broadcast when the background job finishes
   useEffect(() => {
-    const userState = useStore.getState();
     // Assuming your token decoding or state provides the user's ID
     // Hardcoded to 1 for example purposes if user ID isn't in state yet
     const userId = 1; 

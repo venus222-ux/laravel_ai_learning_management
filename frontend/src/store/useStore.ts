@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import API from "../api";
-import type { AppState } from "@/types";
+import type { AuthState } from "@/types";
 
-export const useStore = create<AppState>((set, get) => {
+
+export const useStore = create<AuthState>((set, get) => {
   let intervalId: ReturnType<typeof setInterval> | null = null;
 
   return {

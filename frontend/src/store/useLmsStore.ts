@@ -1,17 +1,7 @@
 import { create } from "zustand";
 import { getCourses, getCourse, getLesson } from "../api";
-import type { Course, Lesson } from "@/types";
+import type { LmsState } from "@/types";
 
-interface LmsState {
-  courses: Course[];
-  activeCourse: Course | null;
-  activeLesson: Lesson | null;
-  isLoadingLms: boolean;
-
-  fetchCoursesList: () => Promise<void>;
-  fetchSingleCourse: (id: string) => Promise<void>;
-  fetchSingleLesson: (courseId: string, lessonId: string) => Promise<void>;
-}
 
 export const useLmsStore = create<LmsState>((set) => ({
   courses: [],
@@ -31,27 +21,36 @@ export const useLmsStore = create<LmsState>((set) => ({
     }
   },
 
-  fetchSingleCourse: async (id: string) => {
-    set({ isLoadingLms: true });
-    try {
-      const res = await getCourse(id);
-      set({ activeCourse: res.data.course });
-    } catch (err) {
-      console.error("Failed to fetch course:", err);
-    } finally {
-      set({ isLoadingLms: false });
-    }
-  },
+ fetchSingleCourse: async (id: string | number) => {
+  set({ isLoadingLms: true });
 
-  fetchSingleLesson: async (courseId: string, lessonId: string) => {
-    set({ isLoadingLms: true, activeLesson: null });
-    try {
-      const res = await getLesson(courseId, lessonId);
-      set({ activeLesson: res.data.lesson });
-    } catch (err) {
-      console.error("Failed to fetch lesson:", err);
-    } finally {
-      set({ isLoadingLms: false });
-    }
-  },
+  try {
+    const res = await getCourse(String(id));
+    set({ activeCourse: res.data.course });
+  } catch (err) {
+    console.error("Failed to fetch course:", err);
+  } finally {
+    set({ isLoadingLms: false });
+  }
+},
+
+fetchSingleLesson: async (
+  courseId: string | number,
+  lessonId: string | number
+) => {
+  set({ isLoadingLms: true, activeLesson: null });
+
+  try {
+    const res = await getLesson(
+      String(courseId),
+      String(lessonId)
+    );
+
+    set({ activeLesson: res.data.lesson });
+  } catch (err) {
+    console.error("Failed to fetch lesson:", err);
+  } finally {
+    set({ isLoadingLms: false });
+  }
+},
 }));

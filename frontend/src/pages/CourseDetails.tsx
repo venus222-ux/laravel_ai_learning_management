@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useStore } from "../store/useStore";
+import { useLmsStore } from "../store/useLmsStore";
 
 export default function CourseDetails() {
   const { courseId } = useParams();
-  const { activeCourse, isLoadingLms, fetchSingleCourse } = useStore();
+  const { activeCourse, isLoadingLms, fetchSingleCourse } = useLmsStore();
 
   useEffect(() => {
     if (courseId) fetchSingleCourse(courseId);

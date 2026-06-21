@@ -1,4 +1,3 @@
-//frontend/src/types/index.ts
 // ==================== AUTH ====================
 
 export type Role = "user" | "moderator" | "admin";
@@ -49,11 +48,13 @@ export interface ProfileUpdateRequest {
   password?: string;
   password_confirmation?: string;
 }
+
 export interface ProfileFormData {
   email: string;
   password: string;
   password_confirmation: string;
 }
+
 // ==================== API ====================
 
 export interface APIMessageResponse {
@@ -89,10 +90,11 @@ export interface DashboardData {
 
 export type Theme = "light" | "dark";
 
-// types/index.ts
 export type TabType = "home" | "logs" | "users" | "traffic";
 
-export interface AppState {
+// ==================== AUTH STORE ====================
+
+export interface AuthState {
   isAuth: boolean;
   token: string | null;
   role: Role | null;
@@ -109,13 +111,13 @@ export interface AppState {
   stopTokenRefreshLoop: () => void;
 }
 
-
 // ==================== LMS ====================
+
 export interface Lesson {
   id: number;
   course_id: number;
   title: string;
-  content?: string; // Optional because the catalog doesn't load full content
+  content?: string;
   order: number;
 }
 
@@ -124,19 +126,21 @@ export interface Course {
   title: string;
   description: string;
   lessons_count?: number;
-  lessons?: Lesson[]; // Populated when fetching single course details
+  lessons?: Lesson[];
 }
 
-// Add these to your existing AppState interface:
-export interface AppState {
-  // ... existing auth state ...
+// ==================== LMS STORE ====================
+
+export interface LmsState {
   courses: Course[];
   activeCourse: Course | null;
   activeLesson: Lesson | null;
   isLoadingLms: boolean;
-  
-  // LMS Actions
+
   fetchCoursesList: () => Promise<void>;
   fetchSingleCourse: (id: string | number) => Promise<void>;
-  fetchSingleLesson: (courseId: string | number, lessonId: string | number) => Promise<void>;
+  fetchSingleLesson: (
+    courseId: string | number,
+    lessonId: string | number
+  ) => Promise<void>;
 }

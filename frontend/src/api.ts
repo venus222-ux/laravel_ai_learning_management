@@ -126,4 +126,16 @@ export const deleteProfile = () => API.delete<APIMessageResponse>("/profile");
 export const refreshToken = () => API.post<LoginResponse>("/refresh");
 export const logoutRequest = () => API.post<APIMessageResponse>("/logout");
 
+// ==================== LMS API ====================
+export const getCourses = () => API.get("/courses");
+export const getCourse = (id: string | number) => API.get(`/courses/${id}`);
+export const enrollCourse = (id: string | number) => API.post(`/courses/${id}/enroll`);
+export const getLesson = (courseId: string | number, lessonId: string | number) => 
+  API.get(`/courses/${courseId}/lessons/${lessonId}`);
+  
+// Preview for Day 4 AI integration
+export const triggerLessonAi = (courseId: string | number, lessonId: string | number, type: "summary" | "quiz" | "explain") => 
+  API.post(`/courses/${courseId}/lessons/${lessonId}/ai`, { type });
+
+
 export default API;

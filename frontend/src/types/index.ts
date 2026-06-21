@@ -108,3 +108,35 @@ export interface AppState {
   startTokenRefreshLoop: () => void;
   stopTokenRefreshLoop: () => void;
 }
+
+
+// ==================== LMS ====================
+export interface Lesson {
+  id: number;
+  course_id: number;
+  title: string;
+  content?: string; // Optional because the catalog doesn't load full content
+  order: number;
+}
+
+export interface Course {
+  id: number;
+  title: string;
+  description: string;
+  lessons_count?: number;
+  lessons?: Lesson[]; // Populated when fetching single course details
+}
+
+// Add these to your existing AppState interface:
+export interface AppState {
+  // ... existing auth state ...
+  courses: Course[];
+  activeCourse: Course | null;
+  activeLesson: Lesson | null;
+  isLoadingLms: boolean;
+  
+  // LMS Actions
+  fetchCoursesList: () => Promise<void>;
+  fetchSingleCourse: (id: string | number) => Promise<void>;
+  fetchSingleLesson: (courseId: string | number, lessonId: string | number) => Promise<void>;
+}

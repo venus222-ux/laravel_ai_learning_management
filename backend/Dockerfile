@@ -16,6 +16,13 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 # This is the part that fixes your "Class Redis not found" error
 RUN pecl install redis && docker-php-ext-enable redis
 
+
+# Install necessary libraries and the MongoDB extension
+RUN apt-get update && apt-get install -y libssl-dev \
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb
+
+    
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -26,3 +33,4 @@ COPY ./docker/supervisord.conf /etc/supervisor/supervisord.conf
 
 # Start Supervisor
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
+

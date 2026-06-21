@@ -2,49 +2,31 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use OpenAI\Laravel\Facades\OpenAI;
 use Illuminate\Support\Facades\Log;
 
 class AiService
 {
-    protected string $apiKey;
-    protected string $baseUrl;
-    protected string $defaultModel;
-
-    public function __construct()
-    {
-        // Assuming you add OPENAI_API_KEY to your .env
-        $this->apiKey = config('services.openai.key', env('OPENAI_API_KEY'));
-        $this->baseUrl = 'https://api.openai.com/v1';
-        $this->defaultModel = 'gpt-4o-mini';
-    }
-
-    public function generate(string $userPrompt, string $systemPrompt = "You are a helpful teaching assistant.", int $maxTokens = 500)
+    /**
+     * Generate content using the official OpenAI Laravel integration.
+     */
+    public function generate(string $userPrompt, string $systemPrompt = "You are a helpful teaching assistant.", int $maxTokens = 800)
     {
         try {
-            $response = Http::withToken($this->apiKey)
-                ->timeout(30)
-                ->post("{$this->baseUrl}/chat/completions", [
-                    'model' => $this->defaultModel,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => $userPrompt],
-                    ],
-                    'max_tokens' => $maxTokens,
-                    'temperature' => 0.7,
-                ]);
-
-            if ($response->failed()) {
-                Log::error('AI API Error: ' . $response->body());
-                throw new \Exception('Failed to generate AI content.');
-            }
-
-            $data = $response->json();
+            $result = OpenAI::chat()->create([
+                'model' => 'gpt-4o-mini', // Fast, cost-effective model for LMS tasks
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userPrompt],
+                ],
+                'max_tokens' => $maxTokens,
+                'temperature' => 0.7,
+            ]);
 
             return [
-                'content' => $data['choices'][0]['message']['content'] ?? '',
-                'model'   => $data['model'] ?? $this->defaultModel,
-                'tokens'  => $data['usage']['total_tokens'] ?? 0,
+                'content' => $result->choices[0]->message->content ?? '',
+                'model'   => $result->model,
+                'tokens'  => $result->usage->totalTokens ?? 0,
             ];
 
         } catch (\Throwable $th) {
@@ -53,7 +35,6 @@ class AiService
         }
     }
 }
-
 
 /**The AI Service Class
 This service handles

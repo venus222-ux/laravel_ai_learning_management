@@ -1,0 +1,59 @@
+services:
+  # Redis Service
+  redis:
+    image: redis:7
+    container_name: ai_learning_management_redis
+    ports:
+      - "6380:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  # Elasticsearch Service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.10
+    container_name: ai_learning_management_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - bootstrap.memory_lock=true
+    ports:
+      - "9200:9200"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+
+  # Horizon Worker Service
+  laravel_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai_learning_management_worker
+    restart: unless-stopped
+    command: php artisan horizon
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - redis
+    environment:
+      - QUEUE_CONNECTION=redis
+      - REDIS_HOST=ai_learning_management_redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_CACHE_DB=1
+      - APP_ENV=local
+      - APP_NAME=Laravel
+
+volumes:
+  redis_data:
+  es_data:

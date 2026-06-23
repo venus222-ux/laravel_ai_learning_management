@@ -26,6 +26,22 @@ export default function Sidebar({ currentTab, setCurrentTab }: SidebarProps) {
           🌐 Traffic Analytics
         </div>
 
+        {/* Added Course Engine Manager Tab */}
+        <div
+          className={`${styles.navItem} ${currentTab === "courses" ? styles.activeNavItem : ""}`}
+          onClick={() => setCurrentTab("courses")}
+        >
+          📚 Manage Courses
+        </div>
+
+        {/* Added Course Categories Manager Tab */}
+        <div
+          className={`${styles.navItem} ${currentTab === "categories" ? styles.activeNavItem : ""}`}
+          onClick={() => setCurrentTab("categories")}
+        >
+          🏷️ Categories
+        </div>
+
         <div
           className={`${styles.navItem} ${currentTab === "logs" ? styles.activeNavItem : ""}`}
           onClick={() => setCurrentTab("logs")}

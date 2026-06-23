@@ -1,0 +1,153 @@
+/* --- Course Card Base Container --- */
+.courseCard {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 24px;
+  padding: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.3s ease;
+}
+
+.courseCard:hover {
+  transform: translateY(-6px);
+  border-color: #c5c5c5;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+}
+
+.titleWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.cardHeader h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #000000;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.completedBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #e6fcf5;
+  color: #0ca678;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.categoryBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+  align-self: flex-start;
+}
+
+.description {
+  color: #666666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+}
+
+/* --- Metas & Status Bar --- */
+.cardMeta {
+  margin-top: auto;
+}
+
+.metaTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.lessonIndicator {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111111;
+}
+
+.progressText {
+  color: #888888;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.progressContainer {
+  margin-bottom: 2rem;
+}
+
+.progressBarBg {
+  height: 4px;
+  background: #efefef;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: #111111;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.completedFill {
+  background: #10b981;
+}
+
+/* --- Structural Action Triggers --- */
+.actionRow {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.viewButton, .enrollButton {
+  flex: 1;
+  text-align: center;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.925rem;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.viewButton {
+  background: #111111;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.viewButton:hover {
+  background: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.enrollButton {
+  background: transparent;
+  color: #111111;
+  border: 1px solid #e5e5e5;
+  cursor: pointer;
+}
+
+.enrollButton:hover {
+  background: #f5f5f5;
+  border-color: #111111;
+}

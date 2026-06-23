@@ -1,12 +1,14 @@
-// pages/AdminDashboard.tsx (or wherever it is)
 import { useEffect, useState } from "react";
 import API from "../api";
+
 import styles from "../styles/AdminDashboard.module.css";
 import Sidebar from "../components/AdminDashboard/Sidebar";
 import ActivityTable from "../components/AdminDashboard/ActivityTable";
 import TrafficDashboard from "../components/AdminDashboard/TrafficDashboard";
 
 import type { DashboardData, User, TabType } from "@/types";
+import CoursesTab from "@/components/AdminDashboard/CoursesTab";
+import CategoriesTab from "@/components/AdminDashboard/CategoriesTab";
 
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -14,22 +16,22 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<TabType>("home");
 
-  // Fetch main dashboard stats
+
+  // Fetch standard analytics metrics on load
   useEffect(() => {
     API.get("/admin/dashboard")
       .then((res) => setData(res.data))
-      .catch((err) =>
-        setError(err.response?.data?.message || "Request failed"),
-      );
+      .catch((err) => setError(err.response?.data?.message || "Request failed"));
   }, []);
 
-  // Fetch users when "users" tab is selected
-  useEffect(() => {
-    if (currentTab === "users") {
-      fetchUsers();
-    }
-  }, [currentTab]);
+  // Context-aware background data fetch synchronization loops
+useEffect(() => {
+  if (currentTab === "users") {
+    fetchUsers();
+  }
+}, [currentTab]);
 
+  // ==================== CORE FETCH OPERATIONS ====================
   const fetchUsers = async () => {
     try {
       const res = await API.get("/admin/users");
@@ -38,6 +40,9 @@ export default function AdminDashboard() {
       console.error("Failed to fetch users");
     }
   };
+
+
+
 
   const handleDeleteUser = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
@@ -49,9 +54,10 @@ export default function AdminDashboard() {
     }
   };
 
+ 
+
   if (error) return <div className={styles.errorState}>⚠️ Error: {error}</div>;
-  if (!data)
-    return <div className={styles.loadingState}>Loading dashboard...</div>;
+  if (!data) return <div className={styles.loadingState}>Loading dashboard...</div>;
 
   return (
     <div className={styles.dashboardContainer}>
@@ -64,7 +70,7 @@ export default function AdminDashboard() {
             <header className={styles.header}>
               <h1 className={styles.welcomeTitle}>Welcome back, Admin 👋</h1>
               <p className={styles.subtitle}>
-                System is running smoothly. Select a tab from the sidebar.
+                System is running smoothly. Select a tab from the sidebar to manage app infrastructure.
               </p>
             </header>
           </div>
@@ -75,17 +81,13 @@ export default function AdminDashboard() {
           <div className={styles.tabFadeIn}>
             <header className={styles.header}>
               <h2>Activity Dashboard</h2>
-              <p className={styles.subtitle}>
-                Complete audit trail and security metrics.
-              </p>
+              <p className={styles.subtitle}>Complete audit trail and security metrics.</p>
             </header>
 
             <div className={styles.statsGrid}>
               <div className={styles.statCard}>
                 <span className={styles.statLabel}>Logins Today</span>
-                <span className={styles.statValue}>
-                  {data.stats.logins_today}
-                </span>
+                <span className={styles.statValue}>{data.stats.logins_today}</span>
               </div>
               <div className={styles.statCard}>
                 <span className={styles.statLabel}>Failed Attempts</span>
@@ -110,15 +112,11 @@ export default function AdminDashboard() {
           <div className={styles.tabFadeIn}>
             <header className={styles.header}>
               <h2>User Management</h2>
-              <p className={styles.subtitle}>
-                View and manage registered users.
-              </p>
+              <p className={styles.subtitle}>View and manage registered users.</p>
             </header>
 
             <div className={styles.tableWrapper}>
-              <div className={styles.tableHeader}>
-                Total Users: {users.length}
-              </div>
+              <div className={styles.tableHeader}>Total Users: {users.length}</div>
               <table className={styles.adminTable}>
                 <thead>
                   <tr>
@@ -141,10 +139,7 @@ export default function AdminDashboard() {
                       </td>
                       <td>{new Date(user.created_at).toLocaleDateString()}</td>
                       <td>
-                        <button
-                          className={styles.deleteBtn}
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
+                        <button className={styles.deleteBtn} onClick={() => handleDeleteUser(user.id)}>
                           Delete
                         </button>
                       </td>
@@ -156,8 +151,13 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* TRAFFIC TAB - NEW */}
+        {/* TRAFFIC TAB */}
         {currentTab === "traffic" && <TrafficDashboard />}
+
+        {/* COURSES CRUD ENGINE TAB */}
+       {currentTab === "courses" && <CoursesTab />}
+        {/* CATEGORIES CRUD ENGINE TAB */}
+       {currentTab === "categories" && <CategoriesTab />}
       </main>
     </div>
   );

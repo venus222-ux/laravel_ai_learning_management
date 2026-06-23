@@ -10,24 +10,21 @@ use Illuminate\Queue\SerializesModels;
 
 class AiContentGenerated implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
     public $userId;
     public $interactionId;
     public $type;
-    public $data;
+    public $content;
 
-    public function __construct($userId, $interactionId, $type, $data)
+    public function __construct($userId, $interactionId, $type, $content)
     {
         $this->userId = $userId;
         $this->interactionId = $interactionId;
         $this->type = $type;
-        $this->data = $data;
+        $this->content = $content;
     }
 
     public function broadcastOn(): array
     {
-        // Broadcast strictly to this specific user's private channel
         return [
             new PrivateChannel('user.' . $this->userId),
         ];

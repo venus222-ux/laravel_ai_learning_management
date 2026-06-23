@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import API from "../api";
-import type { AuthState } from "@/types";
-
+import type { AuthState, Role  } from "@/types";
 
 export const useStore = create<AuthState>((set, get) => {
   let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -10,14 +9,16 @@ export const useStore = create<AuthState>((set, get) => {
     isAuth: false,
     token: null,
     role: null,
+    user: null, // ✅ IMPORTANT FIX
     initialized: false,
     theme: (localStorage.getItem("theme") as "light" | "dark") || "light",
 
-    setAuth: (token, role) =>
+    setAuth: (token: string, role: Role) =>
       set({
         isAuth: true,
         token,
         role,
+        user: null, // sau user real dacă îl primești din API
       }),
 
     logout: () => {
@@ -30,9 +31,9 @@ export const useStore = create<AuthState>((set, get) => {
         isAuth: false,
         token: null,
         role: null,
+        user: null,
       });
     },
-
     setToken: (token) =>
       set((state) => ({
         token,

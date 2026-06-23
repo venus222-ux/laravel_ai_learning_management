@@ -11,6 +11,9 @@ import type {
   ProfileData,
   ProfileUpdateRequest,
   APIMessageResponse,
+  Course,
+  Category,
+  Lesson,
 } from "@/types";
 
 type FailedQueueItem = {
@@ -137,5 +140,33 @@ export const getLesson = (courseId: string | number, lessonId: string | number) 
 export const triggerLessonAi = (courseId: string | number, lessonId: string | number, type: "summary" | "quiz" | "explain") => 
   API.post(`/courses/${courseId}/lessons/${lessonId}/ai`, { type });
 
+// ==================== ADMIN LMS MANAGEMENT ====================
+
+// Courses Resource Routes
+export const getAdminCourses = () => API.get<Course[]>("/admin/courses");
+export const createAdminCourse = (data: Omit<Course, "id">) => API.post<{ message: string; course: Course }>("/admin/courses", data);
+export const updateAdminCourse = (id: number, data: Partial<Course>) => API.put<{ message: string; course: Course }>(`/admin/courses/${id}`, data);
+export const deleteAdminCourse = (id: number) => API.delete<APIMessageResponse>(`/admin/courses/${id}`);
+
+// Categories Resource Routes
+export const getAdminCategories = () => API.get<Category[]         >("/admin/categories");
+export const createAdminCategory = (data: { name: string }) => API.post<{ message: string; category: Category }>("/admin/categories", data);
+export const updateAdminCategory = (id: number, data: { name: string }) => API.put<{ message: string; category: Category }>(`/admin/categories/${id}`, data);
+export const deleteAdminCategory = (id: number) => API.delete<APIMessageResponse>(`/admin/categories/${id}`);
+
+// Add these lines into your existing api.ts file under "// ==================== ADMIN LMS MANAGEMENT ===================="
+
+// Admin Nested Lessons API Engine
+export const getAdminLessons = (courseId: number) => 
+  API.get<Lesson[]>(`/admin/courses/${courseId}/lessons`);
+
+export const createAdminLesson = (courseId: number, data: { title: string; content: string; order?: number }) => 
+  API.post<{ message: string; lesson: Lesson }>(`/admin/courses/${courseId}/lessons`, data);
+
+export const updateAdminLesson = (courseId: number, lessonId: number, data: Partial<Lesson>) => 
+  API.put<{ message: string; lesson: Lesson }>(`/admin/courses/${courseId}/lessons/${lessonId}`, data);
+
+export const deleteAdminLesson = (courseId: number, lessonId: number) => 
+  API.delete<APIMessageResponse>(`/admin/courses/${courseId}/lessons/${lessonId}`);
 
 export default API;

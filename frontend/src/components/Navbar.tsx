@@ -8,7 +8,6 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   if (!initialized) {
-    // optional: show empty navbar, spinner, or skeleton
     return (
       <div
         className={`${styles.navWrapper} ${theme === "dark" ? styles.dark : ""}`}
@@ -23,7 +22,6 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logoutRequest();
-    } catch {
     } finally {
       logout();
       navigate("/login");
@@ -43,6 +41,16 @@ export default function Navbar() {
         <div className={styles.navGroup}>
           {isAuth ? (
             <>
+              {/* NEW: Courses link */}
+              <NavLink
+                to="/courses"
+                className={({ isActive }) =>
+                  `${styles.link} ${isActive ? styles.activeLink : ""}`
+                }
+              >
+                Courses
+              </NavLink>
+
               <NavLink
                 to="/dashboard"
                 className={({ isActive }) =>

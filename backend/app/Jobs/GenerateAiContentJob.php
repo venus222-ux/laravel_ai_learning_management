@@ -11,19 +11,25 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Services\AiService;
 use App\Services\ActivityLogger;
-use App\Events\AiContentGenerated;
 
 class GenerateAiContentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $userId;
-    protected $lessonId;
-    protected $type;
-    protected $prompt;
+    protected int $userId;
+    protected int $lessonId;
+    protected string $type;
+    protected string $prompt;
 
-    public function __construct($userId, $lessonId, $type, $prompt)
-    {
+    public int $tries = 3;
+    public int $timeout = 120;
+
+    public function __construct(
+        int $userId,
+        int $lessonId,
+        string $type,
+        string $prompt
+    ) {
         $this->userId = $userId;
         $this->lessonId = $lessonId;
         $this->type = $type;
@@ -32,37 +38,66 @@ class GenerateAiContentJob implements ShouldQueue
 
     public function handle(AiService $aiService): void
     {
-        // 1. Log pending interaction
         $interaction = ActivityLogger::logAiInteraction([
-            'user_id'   => $this->userId,
+            'user_id' => $this->userId,
             'lesson_id' => $this->lessonId,
-            'type'      => $this->type,
-            'prompt'    => $this->prompt,
-            'status'    => 'pending'
+            'type' => $this->type,
+            'prompt' => $this->prompt,
+            'status' => 'pending',
         ]);
 
         try {
-            $systemPrompt = "You are an expert tutor. Provide responses in clean Markdown formatting.";
+            $systemPrompt = 'You are an expert tutor. Provide responses in clean Markdown formatting.';
 
-            // 2. Call the AI Service
-            $result = $aiService->generate($this->prompt, $systemPrompt);
+            $result = $aiService->generate(
+                $this->prompt,
+                $systemPrompt
+            );
 
-            // 3. Update MongoDB interaction with success and usage stats
             $interaction->update([
-                'response'    => $result['content'],
-                'model_used'  => $result['model'],
+                'response' => $result['content'],
+                'model_used' => $result['model'],
                 'tokens_used' => $result['tokens'],
-                'status'      => 'completed',
+                'status' => 'completed',
             ]);
 
-            // 4. Broadcast to frontend via Pusher
-            event(new AiContentGenerated($this->userId, $interaction->_id, $this->type, $result['content']));
+            event(new AiContentGenerated(
+                $this->userId,
+                (string) $interaction->_id,
+                $this->type,
+                $result['content']
+            ));
 
-        } catch (\Exception $e) {
-            // Log failure
-            $interaction->update(['status' => 'failed', 'response' => $e->getMessage()]);
+        } catch (\Throwable $e) {
 
-            // Optionally broadcast a failure event so the frontend stops loading
-            event(new AiContentGenerated($this->userId, $interaction->_id, 'error', 'Failed to generate content. Please try again.'));
+            $interaction->update([
+                'status' => 'failed',
+                'response' => $e->getMessage(),
+            ]);
+
+            event(new AiContentGenerated(
+                $this->userId,
+                (string) $interaction->_id,
+                'error',
+                'Failed to generate content. Please try again.'
+            ));
+
+            throw $e;
         }
+    }
+
+    public function backoff(): array
+    {
+        return [10, 30, 60];
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        logger()->error('AI generation job failed', [
+            'user_id' => $this->userId,
+            'lesson_id' => $this->lessonId,
+            'type' => $this->type,
+            'error' => $exception->getMessage(),
+        ]);
+    }
 }

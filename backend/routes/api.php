@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminCourseController;
+use App\Http\Controllers\AdminLessonController;
 use App\Http\Controllers\LmsController;
 
 // Public routes
@@ -17,9 +20,7 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
-    Route::get('/dashboard', function () {
-        return response()->json(['message' => 'User Dashboard']);
-    });
+   Route::get('/dashboard', [LmsController::class, 'getDashboardData']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
@@ -34,6 +35,18 @@ Route::middleware(['jwt.auth'])->group(function () {
     // Lesson & AI Routes
     Route::get('/courses/{course}/lessons/{lesson}', [LmsController::class, 'getLesson']);
     Route::post('/courses/{course}/lessons/{lesson}/ai', [LmsController::class, 'triggerAi']);
+    Route::get('/suggestions', [LmsController::class, 'getRecommendations']);
+    Route::post('/courses/{course}/lessons/{lesson}/complete', [LmsController::class, 'completeLesson']);
+    Route::get(
+       '/courses/{course}/completed-lessons',
+       [LmsController::class, 'getCompletedLessons']
+    );
+    Route::get('/courses/{course}/progress', [LmsController::class, 'getProgress']);
+
+    Route::get(
+    '/certificates/{course}',
+    [LmsController::class, 'getCertificate']
+);
 });
 
 
@@ -46,6 +59,14 @@ Route::prefix('admin')
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
         Route::get('/users', [AdminController::class, 'users']); // READ
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']); // DELETE
+        Route::get('/metrics/global', [AdminCourseController::class, 'globalStats']);
+        Route::apiResource('courses', AdminCourseController::class);
+        Route::apiResource('categories', AdminCategoryController::class);
+
+        Route::get('/courses/{course}/lessons', [AdminLessonController::class, 'index']);
+        Route::post('/courses/{course}/lessons', [AdminLessonController::class, 'store']);
+        Route::put('/courses/{course}/lessons/{lesson}', [AdminLessonController::class, 'update']);
+        Route::delete('/courses/{course}/lessons/{lesson}', [AdminLessonController::class, 'destroy']);
 });
 
 

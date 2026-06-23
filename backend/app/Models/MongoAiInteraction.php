@@ -12,11 +12,13 @@ class MongoAiInteraction extends Model
     protected $fillable = [
         'user_id',
         'lesson_id',
-        'type', // e.g., 'summary', 'quiz'
+        'type',
         'prompt',
         'response',
         'model_used',
         'tokens_used',
-        'status' // 'pending', 'completed', 'failed'
+        'status'
     ];
+
+    public $timestamps = true;
 }

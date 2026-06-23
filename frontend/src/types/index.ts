@@ -90,7 +90,13 @@ export interface DashboardData {
 
 export type Theme = "light" | "dark";
 
-export type TabType = "home" | "logs" | "users" | "traffic";
+export type TabType =
+  | "home"
+  | "logs"
+  | "traffic"
+  | "users"
+  | "courses"
+  | "categories";
 
 // ==================== AUTH STORE ====================
 
@@ -100,6 +106,8 @@ export interface AuthState {
   role: Role | null;
   theme: Theme;
   initialized: boolean;
+
+   user: User | null; 
 
   setAuth: (token: string, role: Role) => void;
   logout: () => void;
@@ -144,3 +152,44 @@ export interface LmsState {
     lessonId: string | number
   ) => Promise<void>;
 }
+
+// ==================== LMS MODELS ====================
+
+export interface Lesson {
+  id: number;
+  course_id: number;
+  title: string;
+  content?: string;
+  order: number;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  courses_count?: number;
+  created_at?: string;
+}
+
+export interface Course {
+  id: number;
+  title: string;
+  description: string;
+  category_id: number | null;
+  lessons_count?: number;
+  lessons?: Lesson[];
+  category?: Category | null;
+  created_at?: string;
+}
+
+interface EnrolledCourse {
+  id: number;
+  title: string;
+  total_lessons: number;
+  completed_lessons_count: number;
+  progress_percent: number;
+  status: "completed" | "enrolled";
+  certificate_url: string | null;
+  certificate_number?: string | null;
+}
+

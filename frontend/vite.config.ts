@@ -12,11 +12,26 @@ export default defineConfig({
       brotliSize: true,
     }),
   ],
+
+  optimizeDeps: {
+    include: [
+      "@tiptap/react",
+      "@tiptap/starter-kit",
+      "@tiptap/extension-table",
+      "@tiptap/extension-table-row",
+      "@tiptap/extension-table-cell",
+      "@tiptap/extension-table-header",
+      "@tiptap/extension-image",
+      "@tiptap/extension-link",
+    ],
+  },
+
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+
   build: {
     rollupOptions: {
       output: {
@@ -28,6 +43,7 @@ export default defineConfig({
       },
     },
   },
+
   server: {
     proxy: {
       "/api": "http://localhost:8000",

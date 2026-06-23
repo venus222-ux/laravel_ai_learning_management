@@ -5,6 +5,9 @@ import { ToastContainer } from "react-toastify";
 import { useStore } from "./store/useStore";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthRestore } from "./store/useAuthRestore";
+import CourseCatalog from "./pages/CourseCatalog";
+import CourseDetails from "./pages/CourseDetails";
+import LessonViewer from "./pages/LessonViewer";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -20,26 +23,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 // ======================================================
 // Day 1 LMS Placeholders (Replace with real pages Day 3)
 // ======================================================
-const CourseCatalog = () => (
-  <div className="container py-5">
-    <h1>Course Catalog</h1>
-    <p>Browse all available courses.</p>
-  </div>
-);
 
-const CourseDetails = () => (
-  <div className="container py-5">
-    <h1>Course Details</h1>
-    <p>Course information, curriculum, progress, reviews.</p>
-  </div>
-);
-
-const LessonViewer = () => (
-  <div className="container py-5">
-    <h1>Lesson Viewer & AI Tutor</h1>
-    <p>Video lesson, quizzes, notes, AI assistant.</p>
-  </div>
-);
 
 // ======================================================
 // Auth Bootstrap

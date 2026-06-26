@@ -14,7 +14,7 @@ class AiService
     {
         try {
             $result = OpenAI::chat()->create([
-                'model' => 'gpt-4o-mini', // Fast, cost-effective model for LMS tasks
+                'model' => 'llama-3.3-70b-versatile', // Using Groq's open-source model
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userPrompt],
@@ -23,8 +23,14 @@ class AiService
                 'temperature' => 0.7,
             ]);
 
+            $rawContent = $result->choices[0]->message->content ?? '';
+
+            // 🛠️ FIX: Strip out markdown wrappers that crash the frontend parser.
+            // Using \x60 (hex for backtick) to prevent UI parsing conflicts.
+            $cleanContent = preg_replace('/^\x60{3}(?:json)?\s+|\s*\x60{3}$/i', '', trim($rawContent));
+
             return [
-                'content' => $result->choices[0]->message->content ?? '',
+                'content' => $cleanContent,
                 'model'   => $result->model,
                 'tokens'  => $result->usage->totalTokens ?? 0,
             ];

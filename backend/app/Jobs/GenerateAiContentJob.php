@@ -61,11 +61,11 @@ class GenerateAiContentJob implements ShouldQueue
                 'status' => 'completed',
             ]);
 
-            event(new AiContentGenerated(
-                $this->userId,
-                (string) $interaction->_id,
-                $this->type,
-                $result['content']
+           event(new AiContentGenerated(
+             $this->userId,
+             (string) $interaction->_id,
+             $this->type,
+             $result['content']
             ));
 
         } catch (\Throwable $e) {

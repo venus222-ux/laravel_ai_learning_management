@@ -8,6 +8,15 @@ use App\Http\Controllers\AdminCourseController;
 use App\Http\Controllers\AdminLessonController;
 use App\Http\Controllers\LmsController;
 
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Http\Request;
+
+// This explicitly catches the React request and validates it using your API/JWT guard
+Route::post('/broadcasting/auth', function (Request $request) {
+    return Broadcast::auth($request);
+})->middleware('auth:api'); // 💡 NOTE: If using Sanctum, change this to 'auth:sanctum'
+
+
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);

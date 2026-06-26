@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useLmsStore } from "../store/useLmsStore";
 import { triggerLessonAi } from "../api";
-import { getEcho } from "../utils/echo";
+import { getEcho } from "../utilis/echo";
 import DOMPurify from "dompurify";
 import { useStore } from "../store/useStore";
 import API from "../api";
 import styles from "../styles/LessonViewer.module.css";
 import confetti from 'canvas-confetti';
+
 interface QuizQuestion {
   question: string;
   options: string[];
@@ -59,30 +60,181 @@ export default function LessonViewer() {
       .catch(console.error);
   }, [courseId]);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    const echo = getEcho();
-    const channel = echo.private(`user.${user.id}`);
+  // ==========================================
+  // 1. REUSABLE ECHO INITIALIZER
+  // ==========================================
+  const initializeEchoListener = (userId: string | number) => {
+    try {
+      const echo = getEcho();
+      const channelName = `user.${userId}`;
+      const channel = echo.private(channelName);
 
-    channel.listen(".ai.completed", (data: { type: string; data: string }) => {
-      setAiResult(data.data);
-      setAiLoading(false);
-      if (data.type === "quiz") {
+      console.log(`📡 [Echo] Active and listening on: private-${channelName}`);
+
+      // Stop listening first to prevent duplicate event triggers
+      channel.stopListening(".ai.completed");
+
+      channel.listen(".ai.completed", (data: any) => {
+        console.log("🎉 FRONTEND RECEIVED PAYLOAD:", data);
+        
+        setAiResult(data.content);
+        setAiLoading(false);
+        
+        if (data.type === "quiz" && data.content) {
+          try {
+            const clean = data.content.replace(/```json/g, "").replace(/```/g, "").trim();
+            setParsedQuiz(JSON.parse(clean));
+          } catch (e) {
+            console.error("JSON parsing failed on frontend:", e);
+          }
+        }
+        setActiveTask(null);
+      });
+    } catch (error) {
+      console.error("💥 Failed to initialize Echo stream:", error);
+    }
+  };
+
+  // ==========================================
+  // 2. COMPONENT MOUNT LISTENER WITH AUTOLOAD RETRY LOOP
+  // ==========================================
+  useEffect(() => {
+    let initializedUserId: string | number | null = null;
+    let retryInterval: NodeJS.Timeout;
+
+    const runSetupAttempt = () => {
+      const token = localStorage.getItem('auth_token'); 
+      let userId: string | number | null = null;
+
+      if (user?.id) {
+        userId = user.id;
+      } else if (token) {
         try {
-          const clean = data.data.replace(/```json/g, "").replace(/```/g, "").trim();
-          setParsedQuiz(JSON.parse(clean));
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const payload = JSON.parse(window.atob(base64));
+          
+          if (payload?.sub) {
+            userId = payload.sub;
+          }
         } catch (e) {
-          console.error("Quiz parse error", e);
+          console.error("Failed to parse JWT token inside stream worker:", e);
         }
       }
-      setActiveTask(null);
-    });
+
+      if (userId) {
+        // If we already spun up a socket for this exact user ID, skip duplicate work
+        if (initializedUserId === userId) return true;
+
+        console.log(`🏁 User ID verified as [${userId}]. Initializing Laravel Echo...`);
+        initializeEchoListener(userId);
+        initializedUserId = userId;
+        return true;
+      }
+      return false;
+    };
+
+    // First rapid attempt on render initialization
+    const isConnected = runSetupAttempt();
+
+    // Async Safe Recovery: If token was loading when mounted, check every 800ms up to 5 times
+    if (!isConnected) {
+      console.warn("🚫 Echo setup skipped initially: Auth state is refreshing. Starting fallback hook listener...");
+      let attempts = 0;
+      
+      retryInterval = setInterval(() => {
+        attempts++;
+        const success = runSetupAttempt();
+        if (success || attempts >= 5) {
+          clearInterval(retryInterval);
+        }
+      }, 800);
+    }
 
     return () => {
-      channel.stopListening(".ai.completed");
-      echo.leave(`user.${user.id}`);
+      if (retryInterval) clearInterval(retryInterval);
+      if (initializedUserId) {
+        try {
+          getEcho().private(`user.${initializedUserId}`).stopListening(".ai.completed");
+        } catch(e) {}
+      }
     };
-  }, [user?.id]);
+  }, [user]);// ==========================================
+  // 2. COMPONENT MOUNT LISTENER WITH AUTOLOAD RETRY LOOP
+  // ==========================================
+  useEffect(() => {
+    let initializedUserId: string | number | null = null;
+    let retryInterval: NodeJS.Timeout;
+
+    const runSetupAttempt = () => {
+      // 💡 Get token and user DIRECTLY from Zustand instead of guessing localStorage keys!
+      const storeState = useStore.getState();
+      const token = storeState.token;
+      
+      let userId: string | number | null = null;
+
+      // 1. Check Zustand state first
+      if (storeState.user?.id) {
+        userId = storeState.user.id;
+        console.log("🟢 [Echo Check] Found User ID from Zustand state:", userId);
+      } 
+      // 2. Fallback to extracting from the Zustand token if user object is delayed
+      else if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const payload = JSON.parse(window.atob(base64));
+          
+          if (payload?.sub) {
+            userId = payload.sub;
+            console.log("🟢 [Echo Check] Found User ID from decoded JWT:", userId);
+          }
+        } catch (e) {
+          console.error("🔴 [Echo Check] Failed to parse JWT token:", e);
+        }
+      } else {
+        console.log("🟡 [Echo Check] No user state and no token found in Zustand store yet...");
+      }
+
+      if (userId) {
+        if (initializedUserId === userId) return true; // Prevent duplicates
+
+        console.log(`🏁 User ID verified as [${userId}]. Initializing Laravel Echo...`);
+        initializeEchoListener(userId);
+        initializedUserId = userId;
+        return true;
+      }
+      return false;
+    };
+
+    // First rapid attempt on render
+    const isConnected = runSetupAttempt();
+
+    // Async Safe Recovery: Check every 500ms up to 10 times (5 seconds total)
+    if (!isConnected) {
+      console.warn("🚫 Echo setup skipped initially. Starting fallback hook listener...");
+      let attempts = 0;
+      
+      retryInterval = setInterval(() => {
+        attempts++;
+        console.log(`⏳ [Echo Retry] Attempt ${attempts}/10...`);
+        const success = runSetupAttempt();
+        
+        if (success || attempts >= 10) {
+          clearInterval(retryInterval);
+        }
+      }, 500);
+    }
+
+    return () => {
+      if (retryInterval) clearInterval(retryInterval);
+      if (initializedUserId) {
+        try {
+          getEcho().private(`user.${initializedUserId}`).stopListening(".ai.completed");
+        } catch(e) {}
+      }
+    };
+  }, [user]); // Re-runs if Zustand finally updates the user object
 
   useEffect(() => {
     if (progressMessage?.includes("certificate")) {
@@ -92,12 +244,33 @@ export default function LessonViewer() {
     }
   }, [progressMessage, courseId]);
 
+  // ==========================================
+  // 3. ACTION HANDLER WITH SAFETY NET
+  // ==========================================
   const handleAiAction = async (type: "summary" | "quiz" | "explain") => {
     setAiLoading(true);
     setActiveTask(type);
     setAiResult(null);
     setParsedQuiz(null);
     setQuizScore(null);
+
+    // 🛡️ ON-DEMAND SAFETY NET (Updated to use Zustand)
+    const storeState = useStore.getState();
+    const token = storeState.token;
+    let currentUserId = storeState.user?.id;
+    
+    if (!currentUserId && token) {
+      try {
+        const payload = JSON.parse(window.atob(token.split('.')[1]));
+        currentUserId = payload.sub;
+      } catch(e) {}
+    }
+
+    if (currentUserId) {
+      console.log(`⚡ [Safety Net] Ensuring Echo connection for user [${currentUserId}] before dispatching API request...`);
+      initializeEchoListener(currentUserId);
+    }
+
     try {
       await triggerLessonAi(courseId!, lessonId!, type);
     } catch {
@@ -108,34 +281,34 @@ export default function LessonViewer() {
   };
 
   const fireConfetti = () => {
-  const end = Date.now() + 3 * 1000;
-  const colors = ['#2563eb', '#10b981', '#f59e0b'];
+    const end = Date.now() + 3 * 1000;
+    const colors = ['#2563eb', '#10b981', '#f59e0b'];
 
-  (function frame() {
-    confetti({
-      particleCount: 5,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0 },
-      colors: colors,
-      zIndex: 9999 // Ensure it's on top of all modal layers
-    });
-    confetti({
-      particleCount: 5,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 },
-      colors: colors,
-      zIndex: 9999
-    });
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors,
+        zIndex: 9999
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors,
+        zIndex: 9999
+      });
 
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  })();
-};
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+  };
 
-const handleMarkAsComplete = async () => {
+  const handleMarkAsComplete = async () => {
     try {
       const res = await API.post(`/courses/${courseId}/lessons/${lessonId}/complete`);
       setCompletedLessons(res.data.completed_lessons || []);
@@ -143,8 +316,6 @@ const handleMarkAsComplete = async () => {
       if (res.data.course_completed) {
         setProgressMessage("🏆 Congratulations! You finished the course!");
         setShowCelebration(true);
-        
-        // --- Call it here ---
         fireConfetti(); 
 
         API.get(`/certificates/${courseId}`)
@@ -189,19 +360,20 @@ const handleMarkAsComplete = async () => {
           <Link to={`/courses/${courseId}`} className="btn btn-sm btn-light border text-secondary fw-medium px-3 rounded-pill">
             ← Back to Course
           </Link>
-<h5
-  className="mt-3 fw-bold text-dark"
-  style={{
-    fontSize: "0.95rem",
-    lineHeight: "1.3",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-  }}
->
-  {activeCourse?.title || "Course Modules"}
-</h5>        </div>
+          <h5
+            className="mt-3 fw-bold text-dark"
+            style={{
+              fontSize: "0.95rem",
+              lineHeight: "1.3",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {activeCourse?.title || "Course Modules"}
+          </h5>
+        </div>
 
         <div className={`p-3 flex-grow-1 overflow-auto ${styles.customScroll}`}>
           <div className="nav flex-column gap-1">
@@ -213,7 +385,8 @@ const handleMarkAsComplete = async () => {
                 <Link
                   key={lesson.id}
                   to={`/courses/${courseId}/lessons/${lesson.id}`}
-                   className={`nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 ${                    isActive 
+                  className={`nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 ${
+                    isActive 
                       ? "bg-dark text-white fw-medium shadow-sm" 
                       : completed 
                       ? "text-success bg-success-subtle bg-opacity-25" 
@@ -222,10 +395,10 @@ const handleMarkAsComplete = async () => {
                   style={{ fontSize: "0.925rem" }}
                 >
                   <div className="d-flex align-items-center text-truncate">
-                  <span className="text-muted me-2 small fw-mono">
-                     {String(idx + 1).padStart(2, "0")}
-                  </span>                    
-                  <span className="text-truncate">{lesson.title}</span>
+                    <span className="text-muted me-2 small fw-mono">
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-truncate">{lesson.title}</span>
                   </div>
                   {completed && <span className="text-success fw-bold ms-2">✓</span>}
                 </Link>

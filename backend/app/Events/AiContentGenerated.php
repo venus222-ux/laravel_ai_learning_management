@@ -10,28 +10,34 @@ use Illuminate\Queue\SerializesModels;
 
 class AiContentGenerated implements ShouldBroadcastNow
 {
-    public $userId;
-    public $interactionId;
-    public $type;
-    public $content;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct($userId, $interactionId, $type, $content)
-    {
-        $this->userId = $userId;
-        $this->interactionId = $interactionId;
-        $this->type = $type;
-        $this->content = $content;
-    }
+    public function __construct(
+        public int $userId,
+        public string $interactionId,
+        public string $type,
+        public string $content
+    ) {}
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('user.' . $this->userId),
+            new PrivateChannel("user.{$this->userId}"),
         ];
     }
 
     public function broadcastAs(): string
     {
         return 'ai.completed';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'userId'        => $this->userId,
+            'interactionId' => $this->interactionId,
+            'type'          => $this->type,
+            'content'       => $this->content,
+        ];
     }
 }

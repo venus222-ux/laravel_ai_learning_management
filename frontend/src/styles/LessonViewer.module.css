@@ -1,17 +1,15 @@
 /* Custom Variable Framework for Premium Cyber-Tech Design */
-:local {
+:root {
   --sidebar-width: 260px;
   --ai-panel-width: 320px;
   --bg-app: #f9f9fe;
   --panel-bg: rgba(255, 255, 255, 0.8);
-  
-  /* Modern High-Energy Pink Scale */
+
   --pink-primary: #f43f5e;
   --pink-gradient: linear-gradient(135deg, #f43f5e 0%, #d946ef 100%);
   --pink-glow: rgba(244, 63, 94, 0.12);
   --pink-glow-intense: rgba(244, 63, 94, 0.25);
-  
-  /* Core Contrast Colors */
+
   --brand-indigo: #6366f1;
   --text-dark: #0f172a;
   --text-muted: #64748b;

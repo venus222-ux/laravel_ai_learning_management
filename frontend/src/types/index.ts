@@ -182,14 +182,13 @@ export interface Course {
   created_at?: string;
 }
 
-interface EnrolledCourse {
-  id: number;
-  title: string;
-  total_lessons: number;
-  completed_lessons_count: number;
-  progress_percent: number;
-  status: "completed" | "enrolled";
-  certificate_url: string | null;
-  certificate_number?: string | null;
-}
-
+// export interface EnrolledCourse {
+//   id: number;
+//   title: string;
+//   total_lessons: number;
+//   completed_lessons_count: number;
+//   progress_percent: number;
+//   status: "completed" | "enrolled";
+//   certificate_url: string | null;
+//   certificate_number?: string | null;
+// }

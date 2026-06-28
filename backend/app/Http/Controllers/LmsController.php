@@ -2,82 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\GenerateAiContentJob;
-use App\Jobs\GenerateCertificatePdfJob;
-use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Services\CourseService;
+use App\Services\ProgressService;
+use App\Services\AiFeatureService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 
 class LmsController extends Controller
 {
-     use AuthorizesRequests;
-    /*
-    |--------------------------------------------------------------------------
-    | Courses
-    |--------------------------------------------------------------------------
-    */
+    use AuthorizesRequests;
 
-  public function getCourses()
+    public function __construct(
+        protected CourseService $courseService,
+        protected ProgressService $progressService,
+        protected AiFeatureService $aiFeatureService
+    ) {}
+
+    public function getCourses()
     {
-        $courses = Course::withCount('lessons')->get();
-
         return response()->json([
-            'courses' => $courses,
+            'courses' => $this->courseService->getAllCourses(),
         ]);
     }
 
     public function getCourse(Course $course)
     {
-        // Kept commented out so any authenticated user can view the syllabus outline
-        // $this->authorize('view', $course);
-
-        $course->load([
-            'lessons' => fn ($query) => $query
-                ->select('id', 'course_id', 'title', 'order')
-                ->orderBy('order'),
-        ]);
-
         return response()->json([
-            'course' => $course,
+            'course' => $this->courseService->getCourseDetails($course),
         ]);
-    } // 🌟 Fixed: Removed the accidental trailing comma here
-
-    /*
-    |--------------------------------------------------------------------------
-    | Enrollment
-    |--------------------------------------------------------------------------
-    */
+    }
 
     public function enroll(Course $course)
     {
-        $user = auth()->user();
-
-        if (! $user->courses()->where('course_id', $course->id)->exists()) {
-            $user->courses()->attach($course->id, [
-                'status' => 'enrolled',
-            ]);
-        }
+        $this->courseService->enrollUser(auth()->user(), $course);
 
         return response()->json([
             'message' => 'Successfully enrolled!',
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Lessons
-    |--------------------------------------------------------------------------
-    */
-
     public function getLesson(Course $course, Lesson $lesson)
     {
         if ($lesson->course_id !== $course->id) {
-            return response()->json([
-                'message' => 'Lesson not found.',
-            ], 404);
+            return response()->json(['message' => 'Lesson not found.'], 404);
         }
 
         $this->authorize('view', $lesson);
@@ -87,115 +56,37 @@ class LmsController extends Controller
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Progress Tracking
-    |--------------------------------------------------------------------------
-    */
+    public function completeLesson(Course $course, Lesson $lesson)
+    {
+        $user = auth()->user();
 
- public function completeLesson(Course $course, Lesson $lesson)
-{
-    $user = auth()->user();
-
-    if (!$user) {
-        return response()->json(['message' => 'Unauthenticated.'], 401);
-    }
-
-    if ($lesson->course_id !== $course->id) {
-        return response()->json(['message' => 'Invalid lesson context.'], 400);
-    }
-
-    // 1. Mark this lesson complete safely
-    if (method_exists($user, 'completedLessons')) {
-        $user->completedLessons()->syncWithoutDetaching([
-            $lesson->id => [
-                'completed_at' => now(),
-            ],
-        ]);
-    } else {
-        return response()->json(['message' => 'Relationship completedLessons missing on User Model.'], 500);
-    }
-
-    // 2. Count progress targets dynamically
-    $totalLessons = $course->lessons()->count();
-
-    $completedCount = $user->completedLessons()
-        ->whereIn('lesson_id', $course->lessons()->pluck('id'))
-        ->count();
-
-    $percentage = $totalLessons > 0
-        ? (int) round(($completedCount / $totalLessons) * 100)
-        : 0;
-
-    if ($percentage > 100) { $percentage = 100; }
-
-    // 3. SAFE PIVOT UPDATE: Only update status since progress_percent column is missing
-    try {
-        $user->courses()->updateExistingPivot($course->id, [
-            'status' => $percentage === 100 ? 'completed' : 'enrolled',
-        ]);
-    } catch (\Exception $e) {
-        // Fallback if the user isn't attached to the course pivot yet
-    }
-
-    $courseCompleted = false;
-
-    if ($percentage === 100) {
-        if (class_exists(\App\Jobs\GenerateCertificatePdfJob::class)) {
-            \App\Jobs\GenerateCertificatePdfJob::dispatch(
-                $user->id,
-                $course->id
-            );
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
         }
-        $courseCompleted = true;
+
+        if ($lesson->course_id !== $course->id) {
+            return response()->json(['message' => 'Invalid lesson context.'], 400);
+        }
+
+        try {
+            $progressData = $this->progressService->markLessonComplete($user, $course, $lesson);
+            return response()->json(array_merge(['message' => 'Progress tracked successfully.'], $progressData));
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
-   return response()->json([
-    'message' => 'Progress tracked successfully.',
-    'progress_percent' => $percentage,
-    'course_completed' => $courseCompleted,
+    public function getCompletedLessons(Course $course)
+    {
+        return response()->json([
+            'completed_lessons' => $this->progressService->getCompletedLessonIds(auth()->user(), $course),
+        ]);
+    }
 
-    'completed_lessons' => $user->completedLessons()
-        ->whereIn(
-            'lesson_id',
-            $course->lessons()->pluck('id')
-        )
-        ->pluck('lesson_id')
-        ->values(),
-]);
-}
-
-
-public function getCompletedLessons(Course $course)
-{
-    $user = auth()->user();
-
-    $completedLessons = $user->completedLessons()
-        ->whereIn(
-            'lesson_id',
-            $course->lessons()->pluck('id')
-        )
-        ->pluck('lesson_id');
-
-    return response()->json([
-        'completed_lessons' => $completedLessons,
-    ]);
-}
-    /*
-    |--------------------------------------------------------------------------
-    | AI Features
-    |--------------------------------------------------------------------------
-    */
-
-    public function triggerAi(
-        Request $request,
-        Course $course,
-        Lesson $lesson
-    ) {
+    public function triggerAi(Request $request, Course $course, Lesson $lesson)
+    {
         if ($lesson->course_id !== $course->id) {
-            return response()->json([
-                'message' => 'Lesson not found.',
-            ], 404);
+            return response()->json(['message' => 'Lesson not found.'], 404);
         }
 
         $this->authorize('view', $lesson);
@@ -204,181 +95,51 @@ public function getCompletedLessons(Course $course)
             'type' => 'required|in:summary,quiz,explain',
         ]);
 
-        $user = auth()->user();
-        $type = $validated['type'];
+        $response = $this->aiFeatureService->dispatchAiJob(auth()->user(), $lesson, $validated['type']);
 
-        $key = "ai-calls:{$user->id}";
-
-        if (RateLimiter::tooManyAttempts($key, 15)) {
-            return response()->json([
-                'message' => 'Too many AI requests. Please wait a moment.',
-            ], 429);
+        if (isset($response['error'])) {
+            return response()->json(['message' => $response['error']], $response['status_code']);
         }
 
-        RateLimiter::hit($key, 900);
-
-        $prompt = match ($type) {
-            'summary' => "Summarize the following lesson content in 3 bullet points:\n\n{$lesson->content}",
-
-            'quiz' => "Generate a 3-question multiple choice quiz based on the following content. Return ONLY a JSON array of objects with 'question', 'options', and 'answer' keys.\n\n{$lesson->content}",
-
-            'explain' => "Explain the following lesson content simply, as if I am 10 years old:\n\n{$lesson->content}",
-        };
-
-        GenerateAiContentJob::dispatch(
-            $user->id,
-            $lesson->id,
-            $type,
-            $prompt
-        );
-
-        return response()->json([
-            'message' => 'AI task queued successfully.',
-            'status' => 'processing',
-        ]);
+        return response()->json($response);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Recommendations
-    |--------------------------------------------------------------------------
-    */
 
     public function getRecommendations()
     {
-        $user = auth()->user();
-
-        $completedCategoryIds = $user->courses()
-            ->wherePivot('status', 'completed')
-            ->pluck('category_id')
-            ->unique();
-
-        $enrolledIds = $user->courses()->pluck('course_id');
-
-        if ($completedCategoryIds->isEmpty()) {
-            $recommendations = Course::withCount('lessons')
-                ->whereNotIn('id', $enrolledIds)
-                ->inRandomOrder()
-                ->take(3)
-                ->get();
-        } else {
-            $recommendations = Course::withCount('lessons')
-                ->whereIn('category_id', $completedCategoryIds)
-                ->whereNotIn('id', $enrolledIds)
-                ->take(4)
-                ->get();
-        }
-
         return response()->json([
-            'recommendations' => $recommendations,
+            'recommendations' => $this->courseService->getRecommendations(auth()->user()),
         ]);
     }
 
-
     public function getProgress(Course $course)
-{
-    $user = auth()->user();
-
-    $progress = $user->courses()
-        ->where('course_id', $course->id)
-        ->first();
-
-    return response()->json([
-        'progress_percent' => $progress?->pivot?->progress_percent ?? 0,
-    ]);
-}
-
-
-public function getCertificate(Course $course)
-{
-    $certificate = Certificate::where('user_id', auth()->id())
-        ->where('course_id', $course->id)
-        ->first();
-
-    if (!$certificate) {
+    {
         return response()->json([
-            'message' => 'Certificate not found'
-        ], 404);
+            'progress_percent' => $this->progressService->getCourseProgress(auth()->user(), $course),
+        ]);
     }
 
-    return response()->json([
-        'file_path' => $certificate->file_path,
-        'certificate_number' => $certificate->certificate_number,
-    ]);
-}
+    public function getCertificate(Course $course)
+    {
+        $certificate = $this->progressService->getCertificate(auth()->user(), $course);
 
+        if (! $certificate) {
+            return response()->json(['message' => 'Certificate not found'], 404);
+        }
 
-/*
-    |--------------------------------------------------------------------------
-    | User Dashboard Context
-    |--------------------------------------------------------------------------
-    | */
+        return response()->json([
+            'file_path' => $certificate->file_path,
+            'certificate_number' => $certificate->certificate_number,
+        ]);
+    }
+
     public function getDashboardData()
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    if (!$user) {
-        return response()->json([
-            'message' => 'Unauthenticated.'
-        ], 401);
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        return response()->json($this->courseService->getDashboardData($user));
     }
-
-    $enrolledCourses = $user->courses()->get();
-
-    $dashboardCourses = $enrolledCourses->map(function ($course) use ($user) {
-
-        $totalLessons = $course->lessons()->count();
-
-        $completedLessonsCount = $user->completedLessons()
-            ->whereIn(
-                'lesson_id',
-                $course->lessons()->pluck('id')
-            )
-            ->count();
-
-        $certificate = \App\Models\Certificate::where(
-            'user_id',
-            $user->id
-        )
-        ->where(
-            'course_id',
-            $course->id
-        )
-        ->first();
-
-        $isCompleted =
-            $totalLessons > 0 &&
-            $completedLessonsCount === $totalLessons;
-
-        return [
-            'id' => $course->id,
-            'title' => $course->title,
-            'total_lessons' => $totalLessons,
-            'completed_lessons_count' => $completedLessonsCount,
-
-            'progress_percent' => $totalLessons > 0
-                ? round(($completedLessonsCount / $totalLessons) * 100)
-                : 0,
-
-            'status' => $isCompleted
-                ? 'completed'
-                : 'enrolled',
-
-            'certificate_url' => $certificate?->file_path,
-
-            'certificate_number' => $certificate?->certificate_number,
-        ];
-    });
-
-    return response()->json([
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-        ],
-
-        'enrolled_courses' => $dashboardCourses,
-    ]);
-}
-
 }

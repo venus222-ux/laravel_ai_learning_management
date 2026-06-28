@@ -56,4 +56,35 @@ class AdminCourseController extends Controller
             'total_courses_hosted' => Course::count()
         ]);
     }
+
+    public function lmsStats()
+{
+    return response()->json([
+        'total_users' => User::role('user')->count(),
+
+        'total_courses' => Course::count(),
+
+        'total_enrollments' => DB::table('course_user')->count(),
+
+        'completed_courses' => DB::table('course_user')
+            ->where('status', 'completed')
+            ->count(),
+
+        'in_progress_courses' => DB::table('course_user')
+            ->whereIn('status', ['enrolled', 'in_progress'])
+            ->count(),
+
+        'users_with_completed_course' => DB::table('course_user')
+            ->where('status', 'completed')
+            ->distinct('user_id')
+            ->count('user_id'),
+
+        'users_currently_learning' => DB::table('course_user')
+            ->whereIn('status', ['enrolled', 'in_progress'])
+            ->distinct('user_id')
+            ->count('user_id'),
+
+        'certificates_issued' => DB::table('certificates')->count(),
+    ]);
+}
 }

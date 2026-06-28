@@ -76,6 +76,8 @@ Route::prefix('admin')
         Route::post('/courses/{course}/lessons', [AdminLessonController::class, 'store']);
         Route::put('/courses/{course}/lessons/{lesson}', [AdminLessonController::class, 'update']);
         Route::delete('/courses/{course}/lessons/{lesson}', [AdminLessonController::class, 'destroy']);
+
+        Route::get('/lms-stats', [AdminCourseController::class, 'lmsStats']);
 });
 
 

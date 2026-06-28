@@ -1,21 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import API from "../api";
 
 import styles from "../styles/AdminDashboard.module.css";
 import Sidebar from "../components/AdminDashboard/Sidebar";
 import ActivityTable from "../components/AdminDashboard/ActivityTable";
-import TrafficDashboard from "../components/AdminDashboard/TrafficDashboard";
+import LmsStats from "@/components/AdminDashboard/LmsStats";
 
 import type { DashboardData, User, TabType } from "@/types";
-import CoursesTab from "@/components/AdminDashboard/CoursesTab";
-import CategoriesTab from "@/components/AdminDashboard/CategoriesTab";
+
+// Lazy load heavy tab modules
+const CoursesTab = lazy(() => import("@/components/AdminDashboard/CoursesTab"));
+const CategoriesTab = lazy(() => import("@/components/AdminDashboard/CategoriesTab"));
+const TrafficDashboard = lazy(() => import("@/components/AdminDashboard/TrafficDashboard"));
 
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<TabType>("home");
-
 
   // Fetch standard analytics metrics on load
   useEffect(() => {
@@ -25,11 +27,11 @@ export default function AdminDashboard() {
   }, []);
 
   // Context-aware background data fetch synchronization loops
-useEffect(() => {
-  if (currentTab === "users") {
-    fetchUsers();
-  }
-}, [currentTab]);
+  useEffect(() => {
+    if (currentTab === "users") {
+      fetchUsers();
+    }
+  }, [currentTab]);
 
   // ==================== CORE FETCH OPERATIONS ====================
   const fetchUsers = async () => {
@@ -41,9 +43,6 @@ useEffect(() => {
     }
   };
 
-
-
-
   const handleDeleteUser = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
@@ -53,8 +52,6 @@ useEffect(() => {
       alert(err.response?.data?.message || "Delete failed");
     }
   };
-
- 
 
   if (error) return <div className={styles.errorState}>⚠️ Error: {error}</div>;
   if (!data) return <div className={styles.loadingState}>Loading dashboard...</div>;
@@ -68,11 +65,15 @@ useEffect(() => {
         {currentTab === "home" && (
           <div className={styles.homeCentered}>
             <header className={styles.header}>
-              <h1 className={styles.welcomeTitle}>Welcome back, Admin 👋</h1>
+              <h1 className={styles.welcomeTitle}>
+                Welcome back, Admin 👋
+              </h1>
               <p className={styles.subtitle}>
                 System is running smoothly. Select a tab from the sidebar to manage app infrastructure.
               </p>
             </header>
+
+            <LmsStats />
           </div>
         )}
 
@@ -151,13 +152,18 @@ useEffect(() => {
           </div>
         )}
 
-        {/* TRAFFIC TAB */}
-        {currentTab === "traffic" && <TrafficDashboard />}
+        {/* LAZY LOADED TABS */}
+        <Suspense fallback={<div className={styles.loadingState}>Loading module...</div>}>
+          {/* TRAFFIC TAB */}
+          {currentTab === "traffic" && <TrafficDashboard />}
 
-        {/* COURSES CRUD ENGINE TAB */}
-       {currentTab === "courses" && <CoursesTab />}
-        {/* CATEGORIES CRUD ENGINE TAB */}
-       {currentTab === "categories" && <CategoriesTab />}
+          {/* COURSES CRUD ENGINE TAB */}
+          {currentTab === "courses" && <CoursesTab />}
+
+          {/* CATEGORIES CRUD ENGINE TAB */}
+          {currentTab === "categories" && <CategoriesTab />}
+        </Suspense>
+
       </main>
     </div>
   );

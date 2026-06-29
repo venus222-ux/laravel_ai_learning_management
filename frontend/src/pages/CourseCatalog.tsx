@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLmsStore } from "../store/useLmsStore";
-import API, { enrollCourse } from "../api";
-import type { Course } from "../types";
+import { enrollCourse } from "../api";
 import CourseCard from "../components/CourseCard";
 import styles from "../styles/CourseCatalog.module.css";
 

@@ -1,17 +1,14 @@
-/* Modern Typography & Fluid Base Setup */
 .catalogWrapper {
   max-width: 1340px;
   margin: 0 auto;
   padding: 4rem 2rem;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   background-color: #fafafa;
   min-height: 100vh;
   color: #111111;
 }
 
-.catalogHeader {
-  margin-bottom: 3.5rem;
-}
+.catalogHeader { margin-bottom: 3.5rem; }
 
 .headerTag {
   font-size: 0.75rem;
@@ -25,125 +22,60 @@
   font-size: 2.5rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #000000;
   margin: 0 0 0.75rem 0;
 }
 
-.catalogHeader p {
-  color: #666666;
-  font-size: 1.15rem;
-  font-weight: 400;
-  margin: 0;
-}
-
-/* --- Dynamic Intelligence Strip --- */
-.recommendationPanel {
-  background: #ffffff;
+/* Modern Search Bar */
+.searchContainer {
+  display: flex;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 12px;
   border: 1px solid #e5e5e5;
-  padding: 2.25rem;
-  border-radius: 20px;
-  margin-bottom: 3.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  max-width: 600px;
+  margin-top: 2rem;
 }
 
-.panelTitleRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
-}
-
-.pulseDot {
-  width: 8px;
-  height: 8px;
-  background-color: #10b981;
-  border-radius: 50%;
-  position: relative;
-}
-
-.pulseDot::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: inherit;
-  border-radius: inherit;
-  animation: pulse 2s infinite;
-}
-
-.recommendationPanel h3 {
-  color: #111111;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.recommendationGrid {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.recCard {
-  background: #fdfdfd;
-  padding: 1.75rem;
-  border-radius: 14px;
-  border: 1px solid #eaeaea;
+.searchBar {
   flex: 1;
-  min-width: 300px;
+  padding: 0.75rem 1rem;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+}
+
+.searchSelect {
+  border: none;
+  border-left: 1px solid #e5e5e5;
+  padding: 0 1rem;
+  background: transparent;
+  font-weight: 600;
+  color: #6366f1;
+  cursor: pointer;
+}
+
+/* Results */
+.resultItem {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  margin-bottom: 1rem;
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.recCard:hover {
-  border-color: #111111;
-  background: #ffffff;
-}
-
-.recCard h4 {
-  margin: 0 0 0.5rem 0;
-  color: #111111;
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.recCard p {
-  color: #666666;
-  font-size: 0.95rem;
-  line-height: 1.55;
-  margin: 0 0 1.5rem 0;
-}
-
-.exploreLink {
-  color: #111111;
-  font-weight: 700;
-  text-decoration: none;
-  font-size: 0.9rem;
-  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  transition: border 0.2s;
 }
 
-.exploreLink span {
-  transition: transform 0.15s ease;
-}
+.resultItem:hover { border-color: #6366f1; }
 
-.exploreLink:hover span {
-  transform: translateX(4px);
-}
-
-/* --- Course Grid Parent Wrapper --- */
 .courseGrid {
   display: grid;
   gap: 2rem;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
 }
 
-/* --- Structural Transitions --- */
 .loadingContainer {
   display: flex;
   flex-direction: column;
@@ -151,25 +83,15 @@
   justify-content: center;
   min-height: 60vh;
   gap: 1.25rem;
-  color: #888888;
-  font-weight: 500;
 }
 
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 2px solid #efefef;
-  border-top-color: #111111;
+  border: 3px solid #efefef;
+  border-top-color: #6366f1;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }

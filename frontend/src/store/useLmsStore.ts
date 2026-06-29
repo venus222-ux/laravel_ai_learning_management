@@ -1,14 +1,20 @@
 import { create } from "zustand";
 import { getCourses, getCourse, getLesson } from "../api";
+import API from "../api";
 import type { LmsState } from "@/types";
 
-
 export const useLmsStore = create<LmsState>((set) => ({
+  // ==================== LMS STATE ====================
   courses: [],
   activeCourse: null,
   activeLesson: null,
   isLoadingLms: false,
 
+  // ==================== SEARCH STATE ====================
+  searchResults: [],
+  isSearching: false,
+
+  // ==================== LMS ACTIONS ====================
   fetchCoursesList: async () => {
     set({ isLoadingLms: true });
     try {
@@ -21,36 +27,52 @@ export const useLmsStore = create<LmsState>((set) => ({
     }
   },
 
- fetchSingleCourse: async (id: string | number) => {
-  set({ isLoadingLms: true });
+  fetchSingleCourse: async (id: string | number) => {
+    set({ isLoadingLms: true });
 
-  try {
-    const res = await getCourse(String(id));
-    set({ activeCourse: res.data.course });
-  } catch (err) {
-    console.error("Failed to fetch course:", err);
-  } finally {
-    set({ isLoadingLms: false });
-  }
-},
+    try {
+      const res = await getCourse(String(id));
+      set({ activeCourse: res.data.course });
+    } catch (err) {
+      console.error("Failed to fetch course:", err);
+    } finally {
+      set({ isLoadingLms: false });
+    }
+  },
 
-fetchSingleLesson: async (
-  courseId: string | number,
-  lessonId: string | number
-) => {
-  set({ isLoadingLms: true, activeLesson: null });
+  fetchSingleLesson: async (
+    courseId: string | number,
+    lessonId: string | number
+  ) => {
+    set({ isLoadingLms: true, activeLesson: null });
 
-  try {
-    const res = await getLesson(
-      String(courseId),
-      String(lessonId)
-    );
+    try {
+      const res = await getLesson(String(courseId), String(lessonId));
+      set({ activeLesson: res.data.lesson });
+    } catch (err) {
+      console.error("Failed to fetch lesson:", err);
+    } finally {
+      set({ isLoadingLms: false });
+    }
+  },
 
-    set({ activeLesson: res.data.lesson });
-  } catch (err) {
-    console.error("Failed to fetch lesson:", err);
-  } finally {
-    set({ isLoadingLms: false });
-  }
-},
+  // ==================== SEARCH ACTIONS ====================
+  executeSearch: async (query: string, type = "standard") => {
+    set({ isSearching: true });
+
+    try {
+      const res = await API.get(
+        `/search?q=${encodeURIComponent(query)}&type=${type}`
+      );
+
+      set({ searchResults: res.data.results });
+    } catch (err) {
+      console.error("Search failed:", err);
+      set({ searchResults: [] });
+    } finally {
+      set({ isSearching: false });
+    }
+  },
+
+  clearSearch: () => set({ searchResults: [] }),
 }));

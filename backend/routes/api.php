@@ -52,10 +52,9 @@ Route::middleware(['jwt.auth'])->group(function () {
     );
     Route::get('/courses/{course}/progress', [LmsController::class, 'getProgress']);
 
-    Route::get(
-    '/certificates/{course}',
-    [LmsController::class, 'getCertificate']
-);
+    Route::get('/certificates/{course}', [LmsController::class, 'getCertificate']);
+
+    Route::get('/search', [LmsController::class, 'search']);
 });
 
 

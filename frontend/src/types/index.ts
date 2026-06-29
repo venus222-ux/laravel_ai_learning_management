@@ -137,6 +137,19 @@ export interface Course {
   lessons?: Lesson[];
 }
 
+// ==================== SEARCH TYPES ====================
+
+export interface SearchResult {
+  id: string;
+  index: "courses" | "lessons"; // Determines how you route the user when clicked
+  score: number;
+  data: {
+    title: string;
+    description?: string;
+    course_id?: number; // Present if it's a lesson
+  };
+}
+
 // ==================== LMS STORE ====================
 
 export interface LmsState {
@@ -145,14 +158,23 @@ export interface LmsState {
   activeLesson: Lesson | null;
   isLoadingLms: boolean;
 
+  searchResults: SearchResult[];
+  isSearching: boolean;
+
   fetchCoursesList: () => Promise<void>;
   fetchSingleCourse: (id: string | number) => Promise<void>;
   fetchSingleLesson: (
     courseId: string | number,
     lessonId: string | number
   ) => Promise<void>;
-}
 
+  executeSearch: (
+    query: string,
+    type?: "standard" | "semantic"
+  ) => Promise<void>;
+
+  clearSearch: () => void;
+}
 // ==================== LMS MODELS ====================
 
 export interface Lesson {

@@ -7,69 +7,30 @@ import CourseCard from "../components/CourseCard";
 import styles from "../styles/CourseCatalog.module.css";
 
 export default function CourseCatalog() {
-  const { courses, isLoadingLms, fetchCoursesList } = useLmsStore();
-  const [suggestions, setSuggestions] = useState<Course[]>([]);
-  const [completedMap, setCompletedMap] = useState<Record<number, number[]>>({});
+  const { courses, isLoadingLms, fetchCoursesList, executeSearch, searchResults, isSearching, clearSearch } = useLmsStore();
+  
+  const [query, setQuery] = useState("");
+  const [searchMode, setSearchMode] = useState<"standard" | "semantic">("standard");
+  const isSearchingMode = query.length > 2;
 
   useEffect(() => {
     fetchCoursesList();
   }, [fetchCoursesList]);
 
   useEffect(() => {
-    API.get("/suggestions")
-      .then((res) => setSuggestions(res.data.recommendations))
-      .catch((err) =>
-        console.error("Could not load dynamic recommendations.", err)
-      );
-  }, []);
-
-  useEffect(() => {
-    if (!courses.length) return;
-
-    const fetchAll = async () => {
-      try {
-        const results = await Promise.all(
-          courses.map((course) =>
-            API.get(`/courses/${course.id}/completed-lessons`)
-              .then((res) => ({
-                courseId: course.id,
-                lessons: res.data.completed_lessons || [],
-              }))
-              .catch(() => ({
-                courseId: course.id,
-                lessons: [],
-              }))
-          )
-        );
-
-        const map: Record<number, number[]> = {};
-        results.forEach((r) => {
-          map[r.courseId] = r.lessons;
-        });
-
-        setCompletedMap(map);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchAll();
-  }, [courses]);
+    if (isSearchingMode) {
+      const delay = setTimeout(() => executeSearch(query, searchMode), 500);
+      return () => clearTimeout(delay);
+    } else {
+      clearSearch();
+    }
+  }, [query, searchMode, executeSearch, clearSearch, isSearchingMode]);
 
   const handleEnroll = async (id: number) => {
     try {
       await enrollCourse(id);
       alert("Enrolled successfully!");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to enroll.");
-    }
-  };
-
-  const getProgress = (course: Course) => {
-    const completed = completedMap[course.id] || [];
-    const total = course.lessons_count || 1;
-    return Math.round((completed.length / total) * 100);
+    } catch { alert("Failed to enroll."); }
   };
 
   if (isLoadingLms && courses.length === 0) {
@@ -85,44 +46,43 @@ export default function CourseCatalog() {
     <div className={styles.catalogWrapper}>
       <header className={styles.catalogHeader}>
         <div className={styles.headerTag}>LMS PLATFORM</div>
-        <h2>Course Catalog</h2>
-        <p>Select an engineered track below to begin context-driven learning modules.</p>
+        <h2>Explore Curriculums</h2>
+        <p>Your personalized path to mastery starts here.</p>
+
+        <div className={styles.searchContainer}>
+          <input
+            className={styles.searchBar}
+            placeholder="Search topics, skills, or courses..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select className={styles.searchSelect} value={searchMode} onChange={(e) => setSearchMode(e.target.value as any)}>
+            <option value="standard">Text Match</option>
+            <option value="semantic">AI Semantic</option>
+          </select>
+        </div>
       </header>
 
-      {/* ================= RECOMMENDATIONS ================= */}
-      {suggestions.length > 0 && (
-        <section className={styles.recommendationPanel}>
-          <div className={styles.panelTitleRow}>
-            <span className={styles.pulseDot}></span>
-            <h3>Dynamic Recommendations</h3>
-          </div>
-          <div className={styles.recommendationGrid}>
-            {suggestions.map((course) => (
-              <div key={course.id} className={styles.recCard}>
-                <div>
-                  <h4>{course.title}</h4>
-                  {course.description && <p>{course.description}</p>}
-                </div>
-                <Link to={`/courses/${course.id}`} state={{ course }} className={styles.exploreLink}>
-                  Explore Track <span>→</span>
-                </Link>
+      {isSearchingMode ? (
+        <section>
+          <h3 style={{ marginBottom: '1rem' }}>{isSearching ? "Searching..." : "Search Results"}</h3>
+          {searchResults.map((result) => (
+            <div key={`${result.id}`} className={styles.resultItem}>
+              <div>
+                <small style={{ color: '#6366f1', fontWeight: 700 }}>{result.index.toUpperCase()}</small>
+                <h4>{result.data.title}</h4>
               </div>
-            ))}
-          </div>
+              <Link to={`/courses/${result.id}`}>View →</Link>
+            </div>
+          ))}
         </section>
+      ) : (
+        <main className={styles.courseGrid}>
+          {courses.map((course) => (
+            <CourseCard key={course.id} course={course} onEnroll={handleEnroll} />
+          ))}
+        </main>
       )}
-
-      {/* ================= COURSES ================= */}
-      <main className={styles.courseGrid}>
-        {courses.map((course) => (
-          <CourseCard
-            key={course.id}
-            course={course}
-            progress={getProgress(course)}
-            onEnroll={handleEnroll}
-          />
-        ))}
-      </main>
     </div>
   );
 }

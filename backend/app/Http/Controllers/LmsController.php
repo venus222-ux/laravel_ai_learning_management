@@ -7,6 +7,7 @@ use App\Models\Lesson;
 use App\Services\CourseService;
 use App\Services\ProgressService;
 use App\Services\AiFeatureService;
+use App\Services\SearchService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,8 @@ class LmsController extends Controller
     public function __construct(
         protected CourseService $courseService,
         protected ProgressService $progressService,
-        protected AiFeatureService $aiFeatureService
+        protected AiFeatureService $aiFeatureService,
+        protected SearchService $searchService
     ) {}
 
     public function getCourses()
@@ -141,5 +143,23 @@ class LmsController extends Controller
         }
 
         return response()->json($this->courseService->getDashboardData($user));
+    }
+
+
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q' => 'required|string|min:2',
+            'type' => 'sometimes|in:standard,semantic'
+        ]);
+
+        $searchType = $validated['type'] ?? 'standard';
+        $results = $this->searchService->search($validated['q'], $searchType);
+
+        return response()->json([
+            'query' => $validated['q'],
+            'type' => $searchType,
+            'results' => $results,
+        ]);
     }
 }

@@ -11,7 +11,7 @@ services:
 
   # Elasticsearch Service
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.10
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     container_name: ai_learning_management_elasticsearch
     environment:
       - discovery.type=single-node
@@ -33,7 +33,7 @@ services:
       - es_data:/usr/share/elasticsearch/data
     restart: unless-stopped
 
-  # Horizon Worker Service
+  # Laravel Horizon Worker Service
   laravel_worker:
     build:
       context: ./backend
@@ -54,6 +54,17 @@ services:
       - APP_ENV=local
       - APP_NAME=Laravel
 
+  # Ollama Service (AI/LLM runtime)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   redis_data:
   es_data:
+  ollama_data:

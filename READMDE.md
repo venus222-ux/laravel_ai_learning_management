@@ -1,209 +1,51 @@
-# Sprint Goal: LMS Core & AI MVP
-
-## Objective
-
-Enable learners to:
-
-- Log in to the platform
-- Browse and enroll in courses
-- Read lessons
-- Use AI-powered learning assistance
-- Track progress
-- Earn a completion certificate
-
----
-
-# User Journey
-
-## 1. Browse Courses
-
-- View course catalog
-- Search and filter courses
-- Explore categories and learning paths
-
-⬇
-
-## 2. Enroll in a Course
-
-- One-click enrollment
-- Course added to student dashboard
-- Progress tracking initialized
-
-⬇
-
-## 3. Start Learning
-
-- Open course details
-- View ordered syllabus
-- Access lessons sequentially
-
-⬇
-
-## 4. Learn with AI Assistance
-
-### AI Features
-
-✅ Lesson Summary
-
-- Generate concise lesson summaries
-
-✅ Quick Quiz
-
-- Create practice questions instantly
-
-✅ Key Concepts
-
-- Extract important learning points
-
-⬇
-
-## 5. Track Progress
-
-- Mark lessons as completed
-- Calculate completion percentage
-- Update student learning status
-
-⬇
-
-## 6. Earn Certificate
-
-- Automatically triggered at 100% completion
-- PDF certificate generated in background
-- Stored and available for download
-
----
-
-# LMS Architecture Overview
-
-Frontend (React + TypeScript)
-
-↓
-
-Laravel API
-
-↓
-
-Business Logic Layer
-
-- Controllers
-- Policies
-- Services
-- Jobs
-- Events
-
-↓
-
-Data Layer
-
-- MySQL
-- MongoDB
-
-↓
-
-AI Services
-
-- Groq / Llama Models
-
----
-
-# AI Content Generation Flow
-
-Student clicks:
-
-"Generate Quiz" or "Summarize Lesson"
-
-↓
-
-LMS Controller
-
-↓
-
-Background Queue Job
-
-↓
-
-AI Service
-
-↓
-
-Groq / Llama API
-
-↓
-
-Response Generated
-
-↓
-
-Interaction Stored (MongoDB)
-
-↓
-
-Real-Time Event Broadcast
-
-↓
-
-Laravel Echo + Pusher
-
-↓
-
-Instant Update in React UI
-
----
-
-# Technical Components
-
-### Controllers
-
-Handle incoming API requests
-
-### Policies
-
-Manage course and lesson access
-
-### Services
-
-Communicate with external AI providers
-
-### Jobs
-
-Execute heavy tasks asynchronously
-
-### Events
-
-Enable real-time updates
-
-### MongoDB
-
-Store AI interactions and history
-
-### Queues
-
-Improve performance and scalability
-
-### PDF Generator
-
-Create completion certificates
-
----
-
-# Sprint Success Criteria
-
-A student can:
-
-✓ Log in
-
-✓ Browse courses
-
-✓ Enroll in a course
-
-✓ Read lessons
-
-✓ Generate AI summaries
-
-✓ Generate AI quizzes
-
-✓ Track learning progress
-
-✓ Receive a completion certificate
-
-✓ Experience real-time AI updates
+Laravel_react_boilerplate\
+├── backend/ # Laravel 12 API
+└── frontend/ # React + Vite + TS SPA
+
+## Comenzi utile de dezvoltare
+
+✅ 1. Set Up Laravel Backend
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+php artisan serve
+
+php artisan jwt:secret
+php artisan config:clear
+php artisan config:cache
+
+✅ 2. Set Up React Frontend
+cd ../frontend
+cp .env.example .env
+npm install
+npm run dev
+
+✅ 3. Run in the root project:
+npm run dev
+docker-compose up -d
+
+## Stack tehnic
+
+**Backend**
+
+- Laravel (PHP) + MySQL
+- Redis (queue, cache) + Laravel Horizon (monitorizare cozi)
+- MongoDB (loguri de upload)
+
+**Frontend**
+
+- React + TypeScript
+- Zustand (state management)
+- React Query (data fetching pentru unele hook-uri)
+- Bootstrap + CSS Modules
+
+
+```env
+QUEUE_CONNECTION=redis
+MAIL_MAILER=smtp
+MAIL_ADMIN_ADDRESS=admin@yourcompany.com
+FRONTEND_URL=http://localhost:5173
+ELASTICSEARCH_HOST=http://127.0.0.1:9200

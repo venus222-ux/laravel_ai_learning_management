@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class SearchService
 {
     protected $client;
+
     protected $aiFeatureService;
 
     public function __construct(AiFeatureService $aiFeatureService)
@@ -33,42 +34,42 @@ class SearchService
     {
         $params = [
             'index' => 'courses,lessons',
-            'body'  => [
+            'body' => [
                 'query' => [
                     'multi_match' => [
-                        'query'  => $query,
+                        'query' => $query,
                         'fields' => ['title^3', 'description', 'content'],
-                        'fuzziness' => 'AUTO'
-                    ]
-                ]
-            ]
+                        'fuzziness' => 'AUTO',
+                    ],
+                ],
+            ],
         ];
 
         return $this->executeSearch($params);
     }
 
-protected function semanticSearch(string $query)
-{
-    // 1. Generate the vector
-    $vector = $this->aiFeatureService->generateEmbedding($query);
+    protected function semanticSearch(string $query)
+    {
+        // 1. Generate the vector
+        $vector = $this->aiFeatureService->generateEmbedding($query);
 
-    // 2. Perform the k-NN search
-    // We use the knn parameter at the top level, which is the standard 8.x approach
-    $params = [
-        'index' => 'courses,lessons',
-        'body'  => [
-            'knn' => [
-                'field' => 'embedding',
-                'query_vector' => $vector,
-                'k' => 10,
-                'num_candidates' => 100
+        // 2. Perform the k-NN search
+        // We use the knn parameter at the top level, which is the standard 8.x approach
+        $params = [
+            'index' => 'courses,lessons',
+            'body' => [
+                'knn' => [
+                    'field' => 'embedding',
+                    'query_vector' => $vector,
+                    'k' => 10,
+                    'num_candidates' => 100,
+                ],
+                '_source' => ['title', 'description', 'content', 'course_id', 'type'],
             ],
-            '_source' => ['title', 'description', 'content', 'course_id', 'type']
-        ]
-    ];
+        ];
 
-    return $this->executeSearch($params);
-}
+        return $this->executeSearch($params);
+    }
 
     protected function executeSearch(array $params)
     {
@@ -77,17 +78,19 @@ protected function semanticSearch(string $query)
 
             // Format the Elasticsearch response for the frontend
             $hits = $response['hits']['hits'] ?? [];
+
             return array_map(function ($hit) {
                 return [
-                    'id'    => $hit['_id'],
+                    'id' => $hit['_id'],
                     'index' => $hit['_index'],
                     'score' => $hit['_score'],
-                    'data'  => $hit['_source'],
+                    'data' => $hit['_source'],
                 ];
             }, $hits);
 
         } catch (\Exception $e) {
-            Log::error('Elasticsearch Query Failed: ' . $e->getMessage());
+            Log::error('Elasticsearch Query Failed: '.$e->getMessage());
+
             return [];
         }
     }

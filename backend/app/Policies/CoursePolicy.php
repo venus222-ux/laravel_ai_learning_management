@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Course;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class CoursePolicy
 {
@@ -19,7 +18,7 @@ class CoursePolicy
     /**
      * Determine whether the user can view the model.
      */
-        public function view(User $user, Course $course): bool
+    public function view(User $user, Course $course): bool
     {
         return $user->courses()
             ->where('course_id', $course->id)

@@ -10,6 +10,6 @@ class Certificate extends Model
         'user_id',
         'course_id',
         'certificate_number',
-        'file_path'
+        'file_path',
     ];
 }

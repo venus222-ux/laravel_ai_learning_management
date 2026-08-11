@@ -1,21 +1,19 @@
 <?php
 
 use App\Http\Controllers\AdminCategoryController;
-use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCourseController;
 use App\Http\Controllers\AdminLessonController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LmsController;
-
-use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Route;
 
 // This explicitly catches the React request and validates it using your API/JWT guard
 Route::post('/broadcasting/auth', function (Request $request) {
     return Broadcast::auth($request);
 })->middleware('auth:api'); // 💡 NOTE: If using Sanctum, change this to 'auth:sanctum'
-
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -29,7 +27,7 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
-   Route::get('/dashboard', [LmsController::class, 'getDashboardData']);
+    Route::get('/dashboard', [LmsController::class, 'getDashboardData']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
@@ -47,8 +45,8 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/suggestions', [LmsController::class, 'getRecommendations']);
     Route::post('/courses/{course}/lessons/{lesson}/complete', [LmsController::class, 'completeLesson']);
     Route::get(
-       '/courses/{course}/completed-lessons',
-       [LmsController::class, 'getCompletedLessons']
+        '/courses/{course}/completed-lessons',
+        [LmsController::class, 'getCompletedLessons']
     );
     Route::get('/courses/{course}/progress', [LmsController::class, 'getProgress']);
 
@@ -56,8 +54,6 @@ Route::middleware(['jwt.auth'])->group(function () {
 
     Route::get('/search', [LmsController::class, 'search']);
 });
-
-
 
 // routes/api.php
 
@@ -77,7 +73,6 @@ Route::prefix('admin')
         Route::delete('/courses/{course}/lessons/{lesson}', [AdminLessonController::class, 'destroy']);
 
         Route::get('/lms-stats', [AdminCourseController::class, 'lmsStats']);
-});
-
+    });
 
 Route::get('/admin/traffic', [AdminController::class, 'traffic']);

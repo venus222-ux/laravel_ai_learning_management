@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
-use OpenAI\Laravel\Facades\OpenAI;
 use Illuminate\Support\Facades\Log;
+use OpenAI\Laravel\Facades\OpenAI;
 
 class AiService
 {
     /**
      * Generate content using the official OpenAI Laravel integration.
      */
-    public function generate(string $userPrompt, string $systemPrompt = "You are a helpful teaching assistant.", int $maxTokens = 800)
+    public function generate(string $userPrompt, string $systemPrompt = 'You are a helpful teaching assistant.', int $maxTokens = 800)
     {
         try {
             $result = OpenAI::chat()->create([
@@ -31,12 +31,12 @@ class AiService
 
             return [
                 'content' => $cleanContent,
-                'model'   => $result->model,
-                'tokens'  => $result->usage->totalTokens ?? 0,
+                'model' => $result->model,
+                'tokens' => $result->usage->totalTokens ?? 0,
             ];
 
         } catch (\Throwable $th) {
-            Log::error("AiService Exception: " . $th->getMessage());
+            Log::error('AiService Exception: '.$th->getMessage());
             throw $th;
         }
     }

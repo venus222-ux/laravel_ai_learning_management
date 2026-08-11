@@ -2,26 +2,29 @@
 
 namespace App\Jobs;
 
-use App\Models\MongoAiInteraction;
 use App\Events\AiContentGenerated;
+use App\Services\ActivityLogger;
+use App\Services\AiService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Services\AiService;
-use App\Services\ActivityLogger;
 
 class GenerateAiContentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected int $userId;
+
     protected int $lessonId;
+
     protected string $type;
+
     protected string $prompt;
 
     public int $tries = 3;
+
     public int $timeout = 120;
 
     public function __construct(
@@ -61,11 +64,11 @@ class GenerateAiContentJob implements ShouldQueue
                 'status' => 'completed',
             ]);
 
-           event(new AiContentGenerated(
-             $this->userId,
-             (string) $interaction->_id,
-             $this->type,
-             $result['content']
+            event(new AiContentGenerated(
+                $this->userId,
+                (string) $interaction->_id,
+                $this->type,
+                $result['content']
             ));
 
         } catch (\Throwable $e) {

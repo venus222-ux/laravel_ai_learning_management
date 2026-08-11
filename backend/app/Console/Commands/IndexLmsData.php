@@ -8,12 +8,14 @@ use App\Services\AiFeatureService;
 use Elastic\Elasticsearch\ClientBuilder;
 use Illuminate\Console\Command;
 
-class IndexLmsData extends Command  //Această clasă conține o comandă de consolă (lms:index) pe care programatorul o rulează pentru a „pregăti” datele.
+class IndexLmsData extends Command  // Această clasă conține o comandă de consolă (lms:index) pe care programatorul o rulează pentru a „pregăti” datele.
 {
     protected $signature = 'lms:index {--fresh : Drop and recreate the indices before indexing}';
+
     protected $description = 'Generate embeddings and index Courses and Lessons into Elasticsearch';
 
     protected $client;
+
     protected $ai;
 
     public function __construct(AiFeatureService $aiFeatureService)
@@ -57,13 +59,13 @@ class IndexLmsData extends Command  //Această clasă conține o comandă de con
 
                 $this->client->index([
                     'index' => 'courses',
-                    'id'    => $course->id,
-                    'body'  => [
-                        'title'       => $course->title,
+                    'id' => $course->id,
+                    'body' => [
+                        'title' => $course->title,
                         'description' => $course->description,
-                        'type'        => 'course',
-                        'embedding'   => $embedding, // The 1536-dimensional float array
-                    ]
+                        'type' => 'course',
+                        'embedding' => $embedding, // The 1536-dimensional float array
+                    ],
                 ]);
             }
         });
@@ -76,19 +78,19 @@ class IndexLmsData extends Command  //Această clasă conține o comandă de con
                 $this->info("Indexing Lesson: {$lesson->title}");
 
                 // You can include the lesson content if it's not too large for the token limit
-                $textToEmbed = "Lesson Title: {$lesson->title}. Content: " . strip_tags($lesson->content);
+                $textToEmbed = "Lesson Title: {$lesson->title}. Content: ".strip_tags($lesson->content);
                 $embedding = $this->ai->generateEmbedding($textToEmbed);
 
                 $this->client->index([
                     'index' => 'lessons',
-                    'id'    => $lesson->id,
-                    'body'  => [
-                        'title'     => $lesson->title,
-                        'content'   => $lesson->content,
+                    'id' => $lesson->id,
+                    'body' => [
+                        'title' => $lesson->title,
+                        'content' => $lesson->content,
                         'course_id' => $lesson->course_id,
-                        'type'      => 'lesson',
+                        'type' => 'lesson',
                         'embedding' => $embedding,
-                    ]
+                    ],
                 ]);
             }
         });
@@ -109,23 +111,23 @@ class IndexLmsData extends Command  //Această clasă conține o comandă de con
         // Create index with k-NN dense vector mapping
         $this->client->indices()->create([
             'index' => $indexName,
-            'body'  => [
+            'body' => [
                 'mappings' => [
                     'properties' => [
-                        'title'       => ['type' => 'text'],
+                        'title' => ['type' => 'text'],
                         'description' => ['type' => 'text'],
-                        'content'     => ['type' => 'text'],
-                        'type'        => ['type' => 'keyword'],
-                        'course_id'   => ['type' => 'integer'],
-                        'embedding'   => [
-                            'type'       => 'dense_vector',
-                            'dims'       => 768, // Must match your AI model's output dimensions
-                            'index'      => true,
-                            'similarity' => 'cosine' // Cosine similarity is best for OpenAI embeddings
-                        ]
-                    ]
-                ]
-            ]
+                        'content' => ['type' => 'text'],
+                        'type' => ['type' => 'keyword'],
+                        'course_id' => ['type' => 'integer'],
+                        'embedding' => [
+                            'type' => 'dense_vector',
+                            'dims' => 768, // Must match your AI model's output dimensions
+                            'index' => true,
+                            'similarity' => 'cosine', // Cosine similarity is best for OpenAI embeddings
+                        ],
+                    ],
+                ],
+            ],
         ]);
     }
 }

@@ -22,7 +22,7 @@ class AdminLessonController extends Controller
         ]);
 
         // Auto-increment relative order context if omitted
-        if (!isset($validated['order'])) {
+        if (! isset($validated['order'])) {
             $validated['order'] = $course->lessons()->max('order') + 1;
         }
 
@@ -30,7 +30,7 @@ class AdminLessonController extends Controller
 
         return response()->json([
             'message' => 'Lesson created successfully',
-            'lesson' => $lesson
+            'lesson' => $lesson,
         ], 201);
     }
 
@@ -51,7 +51,7 @@ class AdminLessonController extends Controller
 
         return response()->json([
             'message' => 'Lesson updated successfully',
-            'lesson' => $lesson
+            'lesson' => $lesson,
         ]);
     }
 

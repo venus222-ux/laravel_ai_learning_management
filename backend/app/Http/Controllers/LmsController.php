@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Services\AiFeatureService;
 use App\Services\CourseService;
 use App\Services\ProgressService;
-use App\Services\AiFeatureService;
 use App\Services\SearchService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -72,6 +72,7 @@ class LmsController extends Controller
 
         try {
             $progressData = $this->progressService->markLessonComplete($user, $course, $lesson);
+
             return response()->json(array_merge(['message' => 'Progress tracked successfully.'], $progressData));
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -145,12 +146,11 @@ class LmsController extends Controller
         return response()->json($this->courseService->getDashboardData($user));
     }
 
-
     public function search(Request $request)
     {
         $validated = $request->validate([
             'q' => 'required|string|min:2',
-            'type' => 'sometimes|in:standard,semantic'
+            'type' => 'sometimes|in:standard,semantic',
         ]);
 
         $searchType = $validated['type'] ?? 'standard';

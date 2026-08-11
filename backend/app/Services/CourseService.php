@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\User;
-use App\Models\Certificate;
 
 class CourseService
 {

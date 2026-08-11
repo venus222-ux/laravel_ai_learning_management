@@ -7,6 +7,7 @@ use MongoDB\Laravel\Eloquent\Model;
 class MongoAiInteraction extends Model
 {
     protected $connection = 'mongodb';
+
     protected $collection = 'ai_interactions';
 
     protected $fillable = [
@@ -17,7 +18,7 @@ class MongoAiInteraction extends Model
         'response',
         'model_used',
         'tokens_used',
-        'status'
+        'status',
     ];
 
     public $timestamps = true;

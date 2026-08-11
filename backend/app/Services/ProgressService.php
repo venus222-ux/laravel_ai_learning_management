@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Jobs\GenerateCertificatePdfJob;
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\User;
-use App\Models\Certificate;
 
-class ProgressService //tracking what a user has done and rewarding them for finishing.
+class ProgressService // tracking what a user has done and rewarding them for finishing.
 {
     public function markLessonComplete(User $user, Course $course, Lesson $lesson): array
     {

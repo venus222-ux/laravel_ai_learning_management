@@ -34,10 +34,10 @@ class AiContentGenerated implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'userId'        => $this->userId,
+            'userId' => $this->userId,
             'interactionId' => $this->interactionId,
-            'type'          => $this->type,
-            'content'       => $this->content,
+            'type' => $this->type,
+            'content' => $this->content,
         ];
     }
 }

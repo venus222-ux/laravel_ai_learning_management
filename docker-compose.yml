@@ -81,7 +81,7 @@ services:
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_DATABASE=ai_learning_management
-      - DB_USERNAME=admin
+      - DB_USERNAME=ai_learning_management
       - DB_PASSWORD=secret
       - REDIS_HOST=redis
       - REDIS_PORT=6379

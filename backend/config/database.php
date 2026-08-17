@@ -30,7 +30,7 @@ return [
     'connections' => [
 
         'sqlite' => [
-            'driver' => 'mysql',
+            'driver' => 'sqlite',
             'url' => env('DB_URL'),
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
@@ -46,9 +46,9 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel_ai_learning_management'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            'database' => env('DB_DATABASE', 'ai_learning_management'),
+            'username' => env('DB_USERNAME', 'ai_learning_management'),
+            'password' => env('DB_PASSWORD', 'secret'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
@@ -116,8 +116,8 @@ return [
             'driver' => 'mongodb',
             'host' => env('DB_MONGO_HOST', '127.0.0.1'),
             'port' => env('DB_MONGO_PORT', 27017),
-            'dsn' => env('DB_MONGO_URI', 'mongodb://127.0.0.1:27017'),
-            'database' => env('DB_MONGO_DATABASE'),
+
+            'database' => env('DB_MONGO_DATABASE', 'ai_learning_management'),
             'username' => env('DB_MONGO_USERNAME', ''),
             'password' => env('DB_MONGO_PASSWORD', ''),
             'options' => [

@@ -13,19 +13,23 @@ export const getEcho = () => {
   // 💡 Grab the token DIRECTLY from Zustand!
   const token = useStore.getState().token;
 
-  echoInstance = new Echo({
-    broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-    forceTLS: true,
-    authEndpoint: 'http://localhost:8000/api/broadcasting/auth',
-    auth: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
+echoInstance = new Echo({
+  broadcaster: 'pusher',
+  key: import.meta.env.VITE_PUSHER_APP_KEY,
+  cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'mt1', // placeholder — wsHost overrides this
+  wsHost: import.meta.env.VITE_PUSHER_HOST,
+  wsPort: Number(import.meta.env.VITE_PUSHER_PORT),
+  forceTLS: import.meta.env.VITE_PUSHER_SCHEME === 'https',
+  enabledTransports: ['ws', 'wss'],
+  disableStats: true,
+  authEndpoint: 'http://localhost:8000/api/broadcasting/auth',
+  auth: {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
     },
-  });
+  },
+});
 
   return echoInstance;
 };

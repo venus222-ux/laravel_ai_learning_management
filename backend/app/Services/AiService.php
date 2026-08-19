@@ -14,7 +14,7 @@ class AiService
     {
         try {
             $result = OpenAI::chat()->create([
-                'model' => 'llama-3.3-70b-versatile', // Using Groq's open-source model
+                'model' => env('AI_MODEL', 'llama-3.3-70b-versatile'),// Using Groq's open-source model
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userPrompt],

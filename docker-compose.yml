@@ -39,13 +39,13 @@ services:
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
       - BROADCAST_CONNECTION=pusher
-      - PUSHER_APP_ID=2169214
-      - PUSHER_APP_KEY=4ed0b19544dfd5f863d7
-      - PUSHER_APP_SECRET=bb73c1b563ed8b291e23
+      - PUSHER_APP_ID=ai_learning_management
+      - PUSHER_APP_KEY=ai_learning_management_key
+      - PUSHER_APP_SECRET=ai_learning_management_secret
       - PUSHER_HOST=soketi
       - PUSHER_PORT=6001
       - PUSHER_SCHEME=http
-      - VITE_PUSHER_HOST=localhost
+      - VITE_PUSHER_HOST=localhost 
       - VITE_PUSHER_PORT=6001
       - VITE_PUSHER_SCHEME=http
     healthcheck:
